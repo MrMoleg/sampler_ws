@@ -1,3 +1,7 @@
 [submodule "src/libVescCan"]
 	path = src/libVescCan
 	url = https://github.com/AlvaroBajceps/libVescCan
+[submodule "src/rex_interfaces"]
+	path = src/rex_interfaces
+	url = https://github.com/MrMoleg/rex_interfaces.git
+	branch = main
