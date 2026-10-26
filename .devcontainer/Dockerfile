@@ -9,6 +9,7 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y ros-jazzy-contro
                 ros-jazzy-ros-gz \
                 ros-jazzy-ros-gz-sim \
                 ros-jazzy-ros-gz-bridge \
+                ros-jazzy-realtime-tools \
                 && rm -rf /var/lib/apt/lists/*
 
 
