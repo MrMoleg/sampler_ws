@@ -13,7 +13,6 @@
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_lifecycle</depend>
-  <depend>sampler_motion_interfaces</depend>
 
   <build_depend>rex_interfaces</build_depend>
   <build_depend>message_generation</build_depend>

@@ -21,7 +21,6 @@ find_package(ros2_control_test_assets REQUIRED)
 find_package(gz-transport13 REQUIRED)
 find_package(rex_interfaces REQUIRED)
 find_package(libVescCan REQUIRED)
-find_package(sampler_motion_interfaces REQUIRED)
 # --------------------------------------------------
 # Build shared library (hardware plugin)
 # --------------------------------------------------
@@ -50,12 +49,10 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp_lifecycle
   angles
   rex_interfaces
-  sampler_motion_interfaces
   ros2_control_test_assets
 )
 ament_export_dependencies(
   rex_interfaces 
-  sampler_motion_interfaces
 )
 
 

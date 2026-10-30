@@ -60,6 +60,7 @@ RUN git submodule update --init --recursive
 RUN bash -c "source /opt/ros/jazzy/setup.bash && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --event-handlers console_start_end+ console_direct+ --executor parallel"
 
 # Prepare .ssh directory for public keys
+# Prepare .ssh directory for public keys
 RUN rm -rf /home/${USERNAME}/.ssh
 RUN mkdir -m 0700 /home/${USERNAME}/.ssh
 
