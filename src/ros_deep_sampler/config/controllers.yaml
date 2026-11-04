@@ -1,101 +1,3 @@
-# controller_manager:
-#   ros__parameters:
-#     update_rate: 100
-
-#     joint_state_broadcaster:
-#       type: joint_state_broadcaster/JointStateBroadcaster
-
-#     # Position control
-#     position_controller:
-#       type: joint_trajectory_controller/JointTrajectoryController
-
-#     # Velocity control
-#     velocity_command_controller:
-#       type: forward_command_controller/ForwardCommandController
-
-#     # Clamp
-#     clamp_position_controller:
-#       type: forward_command_controller/ForwardCommandController
-
-#     # Rotors
-#     rotor_velocity_controller:
-#       type: forward_command_controller/ForwardCommandController
-
-#     vacuum_rotor_velocity_controller:
-#       type: forward_command_controller/ForwardCommandController
-
-#     brush_rotor_velocity_controller:
-#       type: forward_command_controller/ForwardCommandController
-
-
-# # Position trajectory controller
-# position_controller:
-#   ros__parameters:
-#     joints:
-#       - platform_joint
-#       - drill_joint
-#       - container_joint
-
-#     command_interfaces:
-#       - position
-#       - velocity
-
-#     state_interfaces:
-#       - position
-#       - velocity
-
-#     action_monitor_rate: 20.0
-
-#     constraints:
-#       goal_time: 1.0
-#       stopped_velocity_tolerance: 0.01
-
-
-# # Velocity controller for platform and drill
-# velocity_command_controller:
-#   ros__parameters:
-#     joints:
-#       - platform_joint
-#       - drill_joint
-
-#     interface_name: velocity
-
-
-# # Clamp position controller
-# clamp_position_controller:
-#   ros__parameters:
-#     joints:
-#       - clamp_joint
-
-#     interface_name: position
-
-
-# # Main rotor
-# rotor_velocity_controller:
-#   ros__parameters:
-#     joints:
-#       - rotor_joint
-
-#     interface_name: velocity
-
-
-# # Vacuum rotor
-# vacuum_rotor_velocity_controller:
-#   ros__parameters:
-#     joints:
-#       - vacuum_rotor_joint
-
-#     interface_name: velocity
-
-
-# # Brush rotor
-# brush_rotor_velocity_controller:
-#   ros__parameters:
-#     joints:
-#       - brush_rotor_joint
-
-#     interface_name: velocity
-
 controller_manager:
   ros__parameters:
     update_rate: 100
@@ -103,18 +5,19 @@ controller_manager:
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    platform_position_controller:
+    # Position control
+    position_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    # Velocity control
+    velocity_command_controller:
       type: forward_command_controller/ForwardCommandController
 
-    drill_position_controller:
-      type: forward_command_controller/ForwardCommandController
-
-    container_position_controller:
-      type: forward_command_controller/ForwardCommandController
-
+    # Clamp
     clamp_position_controller:
       type: forward_command_controller/ForwardCommandController
 
+    # Rotors
     rotor_velocity_controller:
       type: forward_command_controller/ForwardCommandController
 
@@ -125,44 +28,141 @@ controller_manager:
       type: forward_command_controller/ForwardCommandController
 
 
-platform_position_controller:
+# Position trajectory controller
+position_controller:
   ros__parameters:
     joints:
       - platform_joint
-    interface_name: position
-
-drill_position_controller:
-  ros__parameters:
-    joints:
       - drill_joint
-    interface_name: position
+      - container_joint
 
-container_position_controller:
+    command_interfaces:
+      - position
+      - velocity
+
+    state_interfaces:
+      - position
+      - velocity
+
+    action_monitor_rate: 20.0
+
+    constraints:
+      goal_time: 1.0
+      stopped_velocity_tolerance: 0.01
+
+
+# Velocity controller for platform and drill
+velocity_command_controller:
   ros__parameters:
     joints:
-      - container_joint
-    interface_name: position
+      - platform_joint
+      - drill_joint
 
+    interface_name: velocity
+
+
+# Clamp position controller
 clamp_position_controller:
   ros__parameters:
     joints:
       - clamp_joint
+
     interface_name: position
 
+
+# Main rotor
 rotor_velocity_controller:
   ros__parameters:
     joints:
       - rotor_joint
+
     interface_name: velocity
 
+
+# Vacuum rotor
 vacuum_rotor_velocity_controller:
   ros__parameters:
     joints:
       - vacuum_rotor_joint
+
     interface_name: velocity
 
+
+# Brush rotor
 brush_rotor_velocity_controller:
   ros__parameters:
     joints:
       - brush_rotor_joint
+
     interface_name: velocity
+
+# controller_manager:
+#   ros__parameters:
+#     update_rate: 100
+
+#     joint_state_broadcaster:
+#       type: joint_state_broadcaster/JointStateBroadcaster
+
+#     platform_position_controller:
+#       type: forward_command_controller/ForwardCommandController
+
+#     drill_position_controller:
+#       type: forward_command_controller/ForwardCommandController
+
+#     container_position_controller:
+#       type: forward_command_controller/ForwardCommandController
+
+#     clamp_position_controller:
+#       type: forward_command_controller/ForwardCommandController
+
+#     rotor_velocity_controller:
+#       type: forward_command_controller/ForwardCommandController
+
+#     vacuum_rotor_velocity_controller:
+#       type: forward_command_controller/ForwardCommandController
+
+#     brush_rotor_velocity_controller:
+#       type: forward_command_controller/ForwardCommandController
+
+
+# platform_position_controller:
+#   ros__parameters:
+#     joints:
+#       - platform_joint
+#     interface_name: position
+
+# drill_position_controller:
+#   ros__parameters:
+#     joints:
+#       - drill_joint
+#     interface_name: position
+
+# container_position_controller:
+#   ros__parameters:
+#     joints:
+#       - container_joint
+#     interface_name: position
+
+# clamp_position_controller:
+#   ros__parameters:
+#     joints:
+#       - clamp_joint
+#     interface_name: position
+
+# rotor_velocity_controller:
+#   ros__parameters:
+#     joints:
+#       - rotor_joint
+#     interface_name: velocity
+
+# vacuum_rotor_velocity_controller:
+#   ros__parameters:
+#     joints:
+#       - vacuum_rotor_joint
+#     interface_name: velocity
+
+# brush_rotor_velocity_controller:
+#   ros__parameters:
+#     joints:
+#       - brush_rotor_joint
+#     interface_name: velocity

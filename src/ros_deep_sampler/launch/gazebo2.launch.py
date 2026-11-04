@@ -138,9 +138,8 @@ def generate_launch_description():
     )
 
     controllers = [
-        'platform_position_controller',
-        'drill_position_controller',
-        'container_position_controller',
+        'position_controller',
+        #'velocity_command_controller',
         'clamp_position_controller',
         'rotor_velocity_controller',
         'vacuum_rotor_velocity_controller',
