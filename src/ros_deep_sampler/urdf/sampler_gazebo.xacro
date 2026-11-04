@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<robot name="sampler" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ===================================================== -->
+  <!-- Gazebo ROS 2 Control Plugin                           -->
+  <!-- ===================================================== -->
+
+  <gazebo>
+    <plugin filename="libgz_ros2_control-system.so"
+            name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+
+      <!-- Controller configuration -->
+      <parameters>
+        $(find ros_deep_sampler)/config/controllers.yaml
+      </parameters>
+
+    </plugin>
+  </gazebo>
+
+</robot>
