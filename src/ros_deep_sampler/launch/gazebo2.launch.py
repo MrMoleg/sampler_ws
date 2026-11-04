@@ -64,6 +64,11 @@ def generate_launch_description():
         value_type=str
     )
 
+
+    rviz_config_arg = DeclareLaunchArgument(
+        "rviz_config",
+        default_value="robot_view.rviz",
+    )
     # ---------------------------------------------------------
     # Gazebo
     # ---------------------------------------------------------
@@ -197,6 +202,7 @@ def generate_launch_description():
         gazebo,
 
         robot_state_publisher,
+        rviz_config_arg,
 
         clock_bridge,
 
