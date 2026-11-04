@@ -1,317 +1,55 @@
 <?xml version="1.0"?>
-<robot name="sampler_module"
-       xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="sampler">
+
+    <!-- Xacro arguments -->
+    <xacro:arg name="ros2_control" default="false"/>
+    <xacro:arg name="use_gazebo" default="false"/>
+    <xacro:arg name="use_mock_hardware" default="false"/>
+
+    <!-- Component definitions -->
+    <xacro:include filename="$(find ros_deep_sampler)/urdf/sampler_links.xacro"/>
     <xacro:include filename="$(find ros_deep_sampler)/urdf/sampler_joints.xacro"/>
     <xacro:include filename="$(find ros_deep_sampler)/urdf/sampler_ros2_control.xacro"/>
     <xacro:include filename="$(find ros_deep_sampler)/urdf/sampler_gazebo.xacro"/>
 
-    <xacro:arg name="use_gazebo" default="false"/>
-
-    <!-- Robot links and joints -->
-    <xacro:include filename="$(find ros_deep_sampler)/urdf/sampler_joints.xacro"/>
-
-    <!-- Hardware configuration -->
-    <xacro:include filename="$(find ros_deep_sampler)/urdf/sampler_ros2_control.xacro"/>
-
-    <!-- Gazebo configuration, conditionally included -->
-    <xacro:if value="$(arg use_gazebo)">
-        <xacro:include filename="$(find ros_deep_sampler)/urdf/sampler_gazebo.xacro"/>
-    </xacro:if>
-
-
-  <!-- ====================================================== -->
-  <!-- PARAMETERS                                            -->
-  <!-- ====================================================== -->
-
-  <xacro:property name="base_height" value="2.0"/>
-
-  <!-- ====================================================== -->
-  <!-- REUSABLE MACROS                                       -->
-  <!-- ====================================================== -->
-
-  <!-- Macro for platform and drill blocks -->
-  <xacro:macro name="platform_block_link"
-               params="name size mass ixx iyy izz material color">
-
-    <link name="${name}">
-      <visual>
-        <geometry>
-          <box size="${size}"/>
-        </geometry>
-        <origin xyz="0 0 0" rpy="1.5707 0 0"/>
-
-        <material name="${material}">
-          <color rgba="${color}"/>
-        </material>
-      </visual>
-
-      <collision>
-        <geometry>
-          <box size="${size}"/>
-        </geometry>
-        <origin xyz="0 0 0" rpy="1.5707 0 0"/>
-      </collision>
-
-      <inertial>
-        <mass value="${mass}"/>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <inertia ixx="${ixx}" ixy="0.0" ixz="0.0"
-                 iyy="${iyy}" iyz="0.0"
-                 izz="${izz}"/>
-      </inertial>
-    </link>
-
-  </xacro:macro>
-
-
-  <!-- Macro for rotor links -->
-  <xacro:macro name="simple_rotor_link" params="name">
-
-    <link name="${name}">
-      <visual>
-        <geometry>
-          <box size="0.07 0.07 0.02"/>
-        </geometry>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-
-        <material name="green">
-          <color rgba="0.2 0.8 0.2 1.0"/>
-        </material>
-      </visual>
-
-      <collision>
-        <geometry>
-          <box size="0.07 0.07 0.02"/>
-        </geometry>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-      </collision>
-
-      <inertial>
-        <mass value="0.5"/>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <inertia ixx="0.0022" ixy="0.0" ixz="0.0"
-                 iyy="0.0022" iyz="0.0"
-                 izz="0.0004"/>
-      </inertial>
-    </link>
-
-  </xacro:macro>
-
-
-  <!-- ====================================================== -->
-  <!-- BASE PLATFORM                                          -->
-  <!-- ====================================================== -->
-
-  <link name="world"/>
-
-  <link name="base_link">
-    <visual>
-      <geometry>
-        <box size="0.5 0.5 0.02"/>
-      </geometry>
-      <origin xyz="0 0 0" rpy="0 1.5707 0"/>
-
-      <material name="gray">
-        <color rgba="0.6 0.6 0.6 1.0"/>
-      </material>
-    </visual>
-
-    <collision>
-      <geometry>
-        <box size="0.5 0.5 0.02"/>
-      </geometry>
-      <origin xyz="0 0 0" rpy="0 1.5707 0"/>
-    </collision>
-
-    <inertial>
-      <mass value="2.0"/>
-      <origin xyz="0 0 1" rpy="0 1.5707 0"/>
-      <inertia ixx="0.02" ixy="0.0" ixz="0.0"
-               iyy="0.02" iyz="0.0"
-               izz="0.04"/>
-    </inertial>
-  </link>
-
-
-  <!-- ====================================================== -->
-  <!-- PLATFORM BLOCKS                                        -->
-  <!-- ====================================================== -->
-
-  <xacro:platform_block_link
-      name="platform_link"
-      size="0.1 0.6 0.1"
-      mass="5.0"
-      ixx="0.154"
-      iyy="0.008"
-      izz="0.154"
-      material="blue"
-      color="0.2 0.2 0.8 1.0"/>
-
-  <xacro:platform_block_link
-      name="platform_link1"
-      size="0.1 0.6 0.1"
-      mass="5.0"
-      ixx="0.154"
-      iyy="0.008"
-      izz="0.154"
-      material="blue"
-      color="0.2 0.2 0.8 1.0"/>
-
-
-  <!-- ====================================================== -->
-  <!-- DRILL BLOCKS                                           -->
-  <!-- ====================================================== -->
-
-  <xacro:platform_block_link
-      name="drill_link"
-      size="0.05 0.6 0.05"
-      mass="3.0"
-      ixx="0.01"
-      iyy="0.01"
-      izz="0.01"
-      material="drill_material"
-      color="0.6 0.6 0.6 1.0"/>
-
-  <xacro:platform_block_link
-      name="drill_link1"
-      size="0.05 0.6 0.05"
-      mass="3.0"
-      ixx="0.01"
-      iyy="0.01"
-      izz="0.01"
-      material="drill_material"
-      color="0.6 0.6 0.6 1.0"/>
-
-
-  <!-- ====================================================== -->
-  <!-- ROTORS                                                 -->
-  <!-- ====================================================== -->
-
-  <xacro:simple_rotor_link name="rotor_link"/>
-
-
-  <!-- ====================================================== -->
-  <!-- VACUUM BODY                                            -->
-  <!-- ====================================================== -->
-
-  <link name="vaccum_body_link">
-
-    <visual>
-      <geometry>
-        <box size="0.1 0.1 0.15"/>
-      </geometry>
-
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-
-      <material name="vacuum_blue">
-        <color rgba="0.2 0.3 0.8 1"/>
-      </material>
-    </visual>
-
-    <collision>
-      <geometry>
-        <box size="0.1 0.1 0.15"/>
-      </geometry>
-    </collision>
-
-    <inertial>
-      <mass value="5"/>
-      <origin xyz="0 0 0"/>
-
-      <inertia ixx="0.2" ixy="0" ixz="0"
-               iyy="0.2" iyz="0"
-               izz="0.2"/>
-    </inertial>
-
-  </link>
-
-
-  <!-- Vacuum rotor -->
-  <xacro:simple_rotor_link name="vacuum_rotor_link"/>
-
-  <!-- Brush rotor -->
-  <xacro:simple_rotor_link name="brush_rotor_link"/>
-
-
-  <!-- ====================================================== -->
-  <!-- CONTAINER                                              -->
-  <!-- ====================================================== -->
-
-  <xacro:macro name="container_link" params="name">
-
-    <link name="${name}">
-
-      <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-
-        <geometry>
-          <box size="0.7 0.2 0.02"/>
-        </geometry>
-
-        <material name="container_blue">
-          <color rgba="0 0.4 1 1"/>
-        </material>
-      </visual>
-
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-
-        <geometry>
-          <box size="0.7 0.1 0.02"/>
-        </geometry>
-      </collision>
-
-      <inertial>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-
-        <mass value="1.0"/>
-
-        <inertia ixx="0.01" ixy="0" ixz="0"
-                 iyy="0.01" iyz="0"
-                 izz="0.01"/>
-      </inertial>
-
-    </link>
-
-  </xacro:macro>
-
-  <xacro:container_link name="container_link"/>
-  <xacro:container_link name="container_link1"/>
-
-
-  <!-- ====================================================== -->
-  <!-- CLAMP                                                  -->
-  <!-- ====================================================== -->
-
-  <link name="clamp_link">
-
-    <visual>
-      <geometry>
-        <box size="0.07 0.07 0.02"/>
-      </geometry>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-
-      <material name="clamp_green">
-        <color rgba="0.2 0.8 0.2 1.0"/>
-      </material>
-    </visual>
-
-    <collision>
-      <geometry>
-        <box size="0.07 0.07 0.02"/>
-      </geometry>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-    </collision>
-
-    <inertial>
-      <mass value="0.5"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <inertia ixx="0.0022" ixy="0.0" ixz="0.0"
-               iyy="0.0022" iyz="0.0"
-               izz="0.0004"/>
-    </inertial>
-
-  </link>
+    <!-- Main robot macro -->
+    <xacro:macro name="sampler_robot"
+        params="
+            parent:='world'
+            xyz:='0 0 0'
+            rpy:='0 0 0'
+            ros2_control:=false
+            use_gazebo:=false
+            use_mock_hardware:=false
+            prefix:=''
+        ">
+
+        <!-- Mechanical structure -->
+        <xacro:sampler_links prefix="${prefix}"/>
+        <xacro:sampler_joints prefix="${prefix}"/>
+
+        
+
+        <!-- ROS 2 Control -->
+        <xacro:if value="${ros2_control}">
+            <xacro:sampler_ros2_control
+                use_gazebo="${use_gazebo}"
+                use_mock_hardware="${use_mock_hardware}"
+                prefix="${prefix}"/>
+        </xacro:if>
+
+        <!-- Gazebo -->
+        <xacro:if value="${use_gazebo}">
+            <xacro:sampler_gazebo/>
+        </xacro:if>
+
+    </xacro:macro>
+
+    <!-- Instantiate robot -->
+    <xacro:sampler_robot
+        ros2_control="$(arg ros2_control)"
+        use_gazebo="$(arg use_gazebo)"
+        use_mock_hardware="$(arg use_mock_hardware)"/>
 
 </robot>

@@ -4,230 +4,207 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import (
-    ExecuteProcess,
-    AppendEnvironmentVariable,
+    DeclareLaunchArgument,
+    IncludeLaunchDescription,
     RegisterEventHandler,
+    TimerAction,
 )
 from launch.event_handlers import OnProcessExit
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
 
-from launch.substitutions import Command, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
+
+from launch.substitutions import Command, FindExecutable
 
 
 def generate_launch_description():
 
-    # =====================================================
-    # Package paths
-    # =====================================================
+    package_name = 'ros_deep_sampler'
+    package_share = get_package_share_directory(package_name)
 
-    
-    sampler_pkg = get_package_share_directory('ros_deep_sampler')
-
-    xacro_path = os.path.join(
-        sampler_pkg, 'urdf', 'sampler.urdf.xacro'
+    xacro_file = os.path.join(
+        package_share,
+        'urdf',
+        'sampler.urdf.xacro'
     )
 
-    bridge_yaml = os.path.join(
-        sampler_pkg, 'config', 'bridge.yaml'
+    gazebo_launch_file = os.path.join(
+        get_package_share_directory('ros_gz_sim'),
+        'launch',
+        'gz_sim.launch.py'
     )
 
-    # =====================================================
-    # Generate robot description from Xacro
-    # =====================================================
+    # ---------------------------------------------------------
+    # Launch arguments
+    # ---------------------------------------------------------
+
+    world = LaunchConfiguration('world')
+
+    declare_world = DeclareLaunchArgument(
+        'world',
+        default_value='empty.sdf',
+        description='Gazebo world file'
+    )
+
+    # ---------------------------------------------------------
+    # Robot description
+    # ---------------------------------------------------------
 
     robot_description = ParameterValue(
         Command([
-            'xacro ',
-            xacro_path,
-            ' use_gazebo:=true'
+            FindExecutable(name='xacro'),
+            ' ',
+            xacro_file,
+            ' ros2_control:=true',
+            ' use_gazebo:=true',
+            ' use_mock_hardware:=false',
         ]),
         value_type=str
     )
 
-    # =====================================================
+    # ---------------------------------------------------------
     # Gazebo
-    # =====================================================
+    # ---------------------------------------------------------
 
-    gz_sim = ExecuteProcess(
-        cmd=['gz', 'sim', '-r', 'empty.sdf'],
-        output='screen'
+    gazebo = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(gazebo_launch_file),
+        launch_arguments={
+            'gz_args': ['-r -v 4 ', world]
+        }.items()
     )
 
-    # Make Gazebo find ROS 2 system plugins
-    gz_plugin_path = AppendEnvironmentVariable(
-        name='GZ_SIM_SYSTEM_PLUGIN_PATH',
-        value='/opt/ros/jazzy/lib'
-        
-    )
-
-    gz_bridge = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        name='gz_bridge',
-        arguments=[
-            '--ros-args',
-            '-p',
-            f'config_file:={bridge_yaml}'
-        ],
-        output='screen'
-    )
-
-    # =====================================================
+    # ---------------------------------------------------------
     # Robot State Publisher
-    # =====================================================
+    # ---------------------------------------------------------
 
-    rsp = Node(
+    robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
         name='robot_state_publisher',
+        output='screen',
         parameters=[
             {
                 'robot_description': robot_description,
-                'use_sim_time': True
+                'use_sim_time': True,
             }
+        ]
+    )
+
+    # ---------------------------------------------------------
+    # Gazebo -> ROS clock bridge
+    # ---------------------------------------------------------
+
+    clock_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        name='clock_bridge',
+        arguments=[
+            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'
         ],
         output='screen'
     )
 
-    # =====================================================
+    # ---------------------------------------------------------
     # Spawn robot into Gazebo
-    # =====================================================
+    # ---------------------------------------------------------
 
-    spawn = Node(
+    spawn_entity = Node(
         package='ros_gz_sim',
         executable='create',
         arguments=[
+            '-topic', 'robot_description',
             '-name', 'sampler',
-            '-topic', 'robot_description'
         ],
         output='screen'
     )
 
-    # =====================================================
+    # ---------------------------------------------------------
     # Controller spawners
-    # =====================================================
+    # ---------------------------------------------------------
 
-    joint_state_spawner = Node(
+    joint_state_broadcaster = Node(
         package='controller_manager',
         executable='spawner',
         arguments=[
             'joint_state_broadcaster',
-            '--controller-manager', '/controller_manager',
-            '--controller-manager-timeout', '60'
+            '--controller-manager',
+            '/controller_manager',
+            '--controller-manager-timeout',
+            '60',
         ],
-        parameters=[{'use_sim_time': True}],
         output='screen'
     )
 
-    position_controller_spawner = Node(
-        package='controller_manager',
-        executable='spawner',
-        arguments=[
-            'position_controller',
-            '--controller-manager', '/controller_manager',
-            '--controller-manager-timeout', '60'
-        ],
-        parameters=[{'use_sim_time': True}],
-        output='screen'
+    controllers = [
+        'platform_position_controller',
+        'drill_position_controller',
+        'container_position_controller',
+        'clamp_position_controller',
+        'rotor_velocity_controller',
+        'vacuum_rotor_velocity_controller',
+        'brush_rotor_velocity_controller',
+    ]
+
+    controller_spawners = [
+        Node(
+            package='controller_manager',
+            executable='spawner',
+            arguments=[
+                controller,
+                '--controller-manager',
+                '/controller_manager',
+                '--controller-manager-timeout',
+                '60',
+            ],
+            output='screen'
+        )
+        for controller in controllers
+    ]
+
+    # ---------------------------------------------------------
+    # Launch sequence
+    # ---------------------------------------------------------
+
+    # Wait for Gazebo to start before spawning the model.
+    delayed_spawn = TimerAction(
+        period=5.0,
+        actions=[spawn_entity]
     )
 
-    # Spawn velocity controller inactive.
-    # Activate it later when switching from position control.
-    velocity_controller_spawner = Node(
-        package='controller_manager',
-        executable='spawner',
-        arguments=[
-            'velocity_command_controller',
-            '--inactive',
-            '--controller-manager', '/controller_manager',
-            '--controller-manager-timeout', '60'
-        ],
-        parameters=[{'use_sim_time': True}],
-        output='screen'
-    )
-
-    clamp_position_spawner = Node(
-        package='controller_manager',
-        executable='spawner',
-        arguments=[
-            'clamp_position_controller',
-            '--controller-manager', '/controller_manager',
-            '--controller-manager-timeout', '60'
-        ],
-        parameters=[{'use_sim_time': True}],
-        output='screen'
-    )
-
-    rotor_controller_spawner = Node(
-        package='controller_manager',
-        executable='spawner',
-        arguments=[
-            'rotor_velocity_controller',
-            '--controller-manager', '/controller_manager',
-            '--controller-manager-timeout', '60'
-        ],
-        parameters=[{'use_sim_time': True}],
-        output='screen'
-    )
-
-    vacuum_rotor_controller_spawner = Node(
-        package='controller_manager',
-        executable='spawner',
-        arguments=[
-            'vacuum_rotor_velocity_controller',
-            '--controller-manager', '/controller_manager',
-            '--controller-manager-timeout', '60'
-        ],
-        parameters=[{'use_sim_time': True}],
-        output='screen'
-    )
-
-    brush_rotor_controller_spawner = Node(
-        package='controller_manager',
-        executable='spawner',
-        arguments=[
-            'brush_rotor_velocity_controller',
-            '--controller-manager', '/controller_manager',
-            '--controller-manager-timeout', '60'
-        ],
-        parameters=[{'use_sim_time': True}],
-        output='screen'
-    )
-
-    # =====================================================
-    # Start controllers after robot has been spawned
-    # =====================================================
-
-    spawn_controllers = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=spawn,
+    # After spawning the robot, load joint_state_broadcaster.
+    load_joint_state_broadcaster = RegisterEventHandler(
+        OnProcessExit(
+            target_action=spawn_entity,
             on_exit=[
-                joint_state_spawner,
-                position_controller_spawner,
-                velocity_controller_spawner,
-                clamp_position_spawner,
-                rotor_controller_spawner,
-                vacuum_rotor_controller_spawner,
-                brush_rotor_controller_spawner
+                joint_state_broadcaster
             ]
         )
     )
 
-    # =====================================================
-    # Launch description
-    # =====================================================
+    # After joint_state_broadcaster, load the remaining controllers.
+    load_controllers = RegisterEventHandler(
+        OnProcessExit(
+            target_action=joint_state_broadcaster,
+            on_exit=controller_spawners
+        )
+    )
 
     return LaunchDescription([
 
-        gz_plugin_path,
+        declare_world,
 
-        gz_sim,
-        gz_bridge,
+        gazebo,
 
-        rsp,
+        robot_state_publisher,
 
-        spawn,
+        clock_bridge,
 
-        spawn_controllers
+        load_joint_state_broadcaster,
+
+        load_controllers,
+
+        delayed_spawn,
+
     ])

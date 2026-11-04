@@ -1,86 +1,91 @@
 <?xml version="1.0"?>
-<robot name="sampler" xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+
+  <xacro:macro name="sampler_joints" params="prefix:=''">
+
+    <joint name="${prefix}world_to_base" type="fixed">
+      <parent link="${prefix}world"/>
+      <child link="${prefix}base_link"/>
+      <origin xyz="0 0 2" rpy="0 0 0"/>
+    </joint>
+
+    <!-- Platform vertical movement -->
+    <joint name="${prefix}platform_joint" type="prismatic">
+      <parent link="${prefix}base_link"/>
+      <child link="${prefix}platform_link"/>
+      <origin xyz="0.06 0 0" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="-0.5" upper="0.5" effort="5000" velocity="5"/>
+    </joint>
+
+    <!-- Drill vertical movement -->
+    <joint name="${prefix}drill_joint" type="prismatic">
+      <parent link="${prefix}platform_link"/>
+      <child link="${prefix}drill_link"/>
+      <origin xyz="0.1 0 0" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="-0.5" upper="0.5" effort="5000" velocity="0.5"/>
+    </joint>
+
+    <!-- Drill rotor -->
+    <joint name="${prefix}rotor_joint" type="continuous">
+      <parent link="${prefix}drill_link"/>
+      <child link="${prefix}rotor_link"/>
+      <origin xyz="0 0 -0.3" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="5000" velocity="50"/>
+    </joint>
+
+    <!-- Vacuum body fixed to platform -->
+    <joint name="${prefix}vaccum_fixed_joint" type="fixed">
+      <parent link="${prefix}platform_link"/>
+      <child link="${prefix}vaccum_body_link"/>
+      <origin xyz="0.2 0 -0.25" rpy="0 0 0"/>
+    </joint>
+
+    <!-- Vacuum rotor -->
+    <joint name="${prefix}vacuum_rotor_joint" type="continuous">
+      <parent link="${prefix}vaccum_body_link"/>
+      <child link="${prefix}vacuum_rotor_link"/>
+      <origin xyz="0 0 0.075" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="5000" velocity="50"/>
+    </joint>
+
+    <!-- Brush rotor -->
+    <joint name="${prefix}brush_rotor_joint" type="continuous">
+      <parent link="${prefix}vaccum_body_link"/>
+      <child link="${prefix}brush_rotor_link"/>
+      <origin xyz="0 0 -0.075" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="5000" velocity="50"/>
+    </joint>
+
+    <!-- Container rotation -->
+    <joint name="${prefix}container_joint" type="revolute">
+      <parent link="${prefix}base_link"/>
+      <child link="${prefix}container_link"/>
+      <origin xyz="-0.2 0 -0.6" rpy="0 0 1.57"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="-1.6" upper="1.6" effort="1000" velocity="10"/>
+    </joint>
+
+    <!-- Clamp rotation -->
+    <joint name="${prefix}clamp_joint" type="revolute">
+      <parent link="${prefix}vaccum_body_link"/>
+      <child link="${prefix}clamp_link"/>
+      <origin xyz="0 0.1 0.1" rpy="0 0 0"/>
+      <axis xyz="1 0 0"/>
+      <limit lower="-1.6" upper="1.6" effort="100" velocity="20"/>
+    </joint>
+  </xacro:macro>
   <!-- ===================================================== -->
   <!-- Main mechanical joints                                -->
   <!-- ===================================================== -->
 
   <!-- Fixed connection between world and robot base -->
-  <joint name="world_to_base" type="fixed">
-    <parent link="world"/>
-    <child link="base_link"/>
-    <origin xyz="0 0 2" rpy="0 0 0"/>
-  </joint>
-
-  <!-- Platform vertical movement -->
-  <joint name="platform_joint" type="prismatic">
-    <parent link="base_link"/>
-    <child link="platform_link"/>
-    <origin xyz="0.06 0 0" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
-    <limit lower="-0.5" upper="0.5" effort="5000" velocity="5"/>
-  </joint>
-
-  <!-- Drill vertical movement -->
-  <joint name="drill_joint" type="prismatic">
-    <parent link="platform_link"/>
-    <child link="drill_link"/>
-    <origin xyz="0.1 0 0" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
-    <limit lower="-0.5" upper="0.5" effort="5000" velocity="0.5"/>
-  </joint>
-
-  <!-- Drill rotor -->
-  <joint name="rotor_joint" type="continuous">
-    <parent link="drill_link"/>
-    <child link="rotor_link"/>
-    <origin xyz="0 0 -0.3" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="5000" velocity="50"/>
-  </joint>
-
-  <!-- Vacuum body fixed to platform -->
-  <joint name="vaccum_fixed_joint" type="fixed">
-    <parent link="platform_link"/>
-    <child link="vaccum_body_link"/>
-    <origin xyz="0.2 0 -0.25" rpy="0 0 0"/>
-  </joint>
-
-  <!-- Vacuum rotor -->
-  <joint name="vacuum_rotor_joint" type="continuous">
-    <parent link="vaccum_body_link"/>
-    <child link="vacuum_rotor_link"/>
-    <origin xyz="0 0 0.075" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="5000" velocity="50"/>
-  </joint>
-
-  <!-- Brush rotor -->
-  <joint name="brush_rotor_joint" type="continuous">
-    <parent link="vaccum_body_link"/>
-    <child link="brush_rotor_link"/>
-    <origin xyz="0 0 -0.075" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="5000" velocity="50"/>
-  </joint>
-
-  <!-- Container rotation -->
-  <joint name="container_joint" type="revolute">
-    <parent link="base_link"/>
-    <child link="container_link"/>
-    <origin xyz="-0.2 0 -0.6" rpy="0 0 1.57"/>
-    <axis xyz="0 0 1"/>
-    <limit lower="-1.6" upper="1.6" effort="1000" velocity="10"/>
-  </joint>
-
-  <!-- Clamp rotation -->
-  <joint name="clamp_joint" type="revolute">
-    <parent link="vaccum_body_link"/>
-    <child link="clamp_link"/>
-    <origin xyz="0 0.1 0.1" rpy="0 0 0"/>
-    <axis xyz="1 0 0"/>
-    <limit lower="-1.6" upper="1.6" effort="100" velocity="20"/>
-  </joint>
+  
 
 
 

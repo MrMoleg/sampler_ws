@@ -1,0 +1,3 @@
+joint_state_publisher_gui;
+
+ros-jazzy-gz-ros2-control

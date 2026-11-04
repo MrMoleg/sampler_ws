@@ -1,127 +1,129 @@
 <?xml version="1.0"?>
-<robot name="sampler" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <ros2_control name="SamplerHardwareSystem" type="system">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-     <hardware>
-        <xacro:if value="$(arg use_gazebo)">
-        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
-        </xacro:if>
+    <xacro:macro name="sampler_ros2_control"
+                 params="use_gazebo:=false
+                         use_mock_hardware:=false
+                         prefix:=''">
 
-        <xacro:unless value="$(arg use_gazebo)">
-        <plugin>sampler_hardware_interfaces/SamplerHardware</plugin>
-        </xacro:unless>
-    </hardware>
+        <ros2_control name="${prefix}SamplerSystem" type="system">
 
+            <hardware>
 
-    <!-- =============================================== -->
-    <!-- Platform                                       -->
-    <!-- =============================================== -->
+                <!-- Gazebo simulation -->
+                <xacro:if value="${use_gazebo}">
+                    <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+                </xacro:if>
 
-    <joint name="platform_joint">
-      <command_interface name="position">
-        <param name="min">-0.5</param>
-        <param name="max">0.5</param>
-      </command_interface>
+                <!-- Mock hardware -->
+                <xacro:if value="${use_mock_hardware}">
+                    <plugin>mock_components/GenericSystem</plugin>
+                </xacro:if>
 
-      <command_interface name="velocity">
-        <param name="min">-5.0</param>
-        <param name="max">5.0</param>
-      </command_interface>
+                <!-- Physical hardware -->
+                <xacro:if value="${not use_gazebo and not use_mock_hardware}">
+                    <plugin>sampler_hardware_interfaces/SamplerHardware</plugin>
+                    <param name="can_interface">can0</param>
+                </xacro:if>
 
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
+            </hardware>
 
-    <!-- =============================================== -->
-    <!-- Drill                                          -->
-    <!-- =============================================== -->
+            <!-- Platform -->
+            <joint name="${prefix}platform_joint">
+                <command_interface name="position"/>
+                <command_interface name="velocity"/>
 
-    <joint name="drill_joint">
-      <command_interface name="position">
-        <param name="min">-0.5</param>
-        <param name="max">0.5</param>
-      </command_interface>
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
 
-      <command_interface name="velocity">
-        <param name="min">-0.5</param>
-        <param name="max">0.5</param>
-      </command_interface>
+                <state_interface name="velocity">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+            </joint>
 
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
+            <!-- Drill -->
+            <joint name="${prefix}drill_joint">
+                <command_interface name="position"/>
+                <command_interface name="velocity"/>
 
-    <!-- =============================================== -->
-    <!-- Drill rotor                                    -->
-    <!-- =============================================== -->
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
 
-    <joint name="rotor_joint">
-      <command_interface name="velocity">
-        <param name="min">-50.0</param>
-        <param name="max">50.0</param>
-      </command_interface>
+                <state_interface name="velocity">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+            </joint>
 
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
+            <!-- Main rotor -->
+            <joint name="${prefix}rotor_joint">
+                <command_interface name="velocity"/>
 
-    <!-- =============================================== -->
-    <!-- Vacuum rotor                                   -->
-    <!-- =============================================== -->
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
 
-    <joint name="vacuum_rotor_joint">
-      <command_interface name="velocity">
-        <param name="min">-50.0</param>
-        <param name="max">50.0</param>
-      </command_interface>
+                <state_interface name="velocity">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+            </joint>
 
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
+            <!-- Vacuum rotor -->
+            <joint name="${prefix}vacuum_rotor_joint">
+                <command_interface name="velocity"/>
 
-    <!-- =============================================== -->
-    <!-- Brush rotor                                    -->
-    <!-- =============================================== -->
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
 
-    <joint name="brush_rotor_joint">
-      <command_interface name="velocity">
-        <param name="min">-50.0</param>
-        <param name="max">50.0</param>
-      </command_interface>
+                <state_interface name="velocity">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+            </joint>
 
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
+            <!-- Brush rotor -->
+            <joint name="${prefix}brush_rotor_joint">
+                <command_interface name="velocity"/>
 
-    <!-- =============================================== -->
-    <!-- Container                                      -->
-    <!-- =============================================== -->
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
 
-    <joint name="container_joint">
-      <command_interface name="position">
-        <param name="min">-1.6</param>
-        <param name="max">1.6</param>
-      </command_interface>
+                <state_interface name="velocity">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+            </joint>
 
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
+            <!-- Container -->
+            <joint name="${prefix}container_joint">
+                <command_interface name="position"/>
 
-    <!-- =============================================== -->
-    <!-- Clamp                                          -->
-    <!-- =============================================== -->
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
 
-    <joint name="clamp_joint">
-      <command_interface name="position">
-        <param name="min">-1.6</param>
-        <param name="max">1.6</param>
-      </command_interface>
+                <state_interface name="velocity">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+            </joint>
 
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
+            <!-- Clamp -->
+            <joint name="${prefix}clamp_joint">
+                <command_interface name="position"/>
 
-  </ros2_control>
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+
+                <state_interface name="velocity">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+            </joint>
+
+        </ros2_control>
+
+    </xacro:macro>
 
 </robot>
