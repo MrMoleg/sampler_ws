@@ -90,43 +90,43 @@ CallbackReturn SamplerHardware::on_configure(
             10,
             std::bind(&SamplerHardware::HandleRoverStatus, this, std::placeholders::_1)); 
 
-        platform_cmd_pub_ =
-            get_node()->create_publisher<std_msgs::msg::Float64>(
-                "/platform_joint_cmd", 10);
+        // platform_cmd_pub_ =
+        //     get_node()->create_publisher<std_msgs::msg::Float64>(
+        //         "/platform_joint_cmd", 10);
         
-        drill_cmd_pub_ =
-            get_node()->create_publisher<std_msgs::msg::Float64>(
-                "/drill_joint_cmd", 10);
+        // drill_cmd_pub_ =
+        //     get_node()->create_publisher<std_msgs::msg::Float64>(
+        //         "/drill_joint_cmd", 10);
 
-        container_cmd_pub_ = 
-            get_node()->create_publisher<std_msgs::msg::Float64>(
-                "/container_joint_cmd", 10); 
+        // container_cmd_pub_ = 
+        //     get_node()->create_publisher<std_msgs::msg::Float64>(
+        //         "/container_joint_cmd", 10); 
 
-        clamp_cmd_pub_ = 
-            get_node()->create_publisher<std_msgs::msg::Float64>(
-                "/clamp_joint_cmd", 10);                       
+        // clamp_cmd_pub_ = 
+        //     get_node()->create_publisher<std_msgs::msg::Float64>(
+        //         "/clamp_joint_cmd", 10);                       
 
-        rotor_cmd_pub_ =
-             get_node()->create_publisher<std_msgs::msg::Float64>(
-                "/rotor_joint_cmd", 10);
-        vacuum_rotor_cmd_pub_ =
-             get_node()->create_publisher<std_msgs::msg::Float64>(
-                "/vacuum_rotor_joint_cmd", 10);
-        brush_rotor_cmd_pub_ =
-             get_node()->create_publisher<std_msgs::msg::Float64>(
-                "/brush_rotor_joint_cmd", 10);
-        joint_state_sub_ =
-            get_node()->create_subscription<sensor_msgs::msg::JointState>(
-                "/gz_joint_states",
-              10,
-              [this](const sensor_msgs::msg::JointState::SharedPtr msg)
-              {
-                  for (size_t i = 0; i < msg->name.size(); i++)
-                  {
-                      sim_positions_[msg->name[i]] = msg->position[i];
-                      sim_vel_[msg->name[i]] = msg->velocity[i];
-                  }
-              });
+        // rotor_cmd_pub_ =
+        //      get_node()->create_publisher<std_msgs::msg::Float64>(
+        //         "/rotor_joint_cmd", 10);
+        // vacuum_rotor_cmd_pub_ =
+        //      get_node()->create_publisher<std_msgs::msg::Float64>(
+        //         "/vacuum_rotor_joint_cmd", 10);
+        // brush_rotor_cmd_pub_ =
+        //      get_node()->create_publisher<std_msgs::msg::Float64>(
+        //         "/brush_rotor_joint_cmd", 10);
+        // joint_state_sub_ =
+        //     get_node()->create_subscription<sensor_msgs::msg::JointState>(
+        //         "/gz_joint_states",
+        //       10,
+        //       [this](const sensor_msgs::msg::JointState::SharedPtr msg)
+        //       {
+        //           for (size_t i = 0; i < msg->name.size(); i++)
+        //           {
+        //               sim_positions_[msg->name[i]] = msg->position[i];
+        //               sim_vel_[msg->name[i]] = msg->velocity[i];
+        //           }
+        //       });
 
         mMissionCmd_ = get_node()->create_subscription<MissionCmd>("/MQTT/SamplerControl", 10,
                     std::bind(&SamplerHardware::HandleMissionCmd, this, std::placeholders::_1));
@@ -184,18 +184,18 @@ SamplerHardware::export_command_interfaces()
         hardware_interface::HW_IF_POSITION,
         &platform_cmd_);
 
-    command_interfaces.emplace_back(
-        "platform_vel_joint",
-        hardware_interface::HW_IF_VELOCITY,
-        &platform_vel_cmd_);
-    command_interfaces.emplace_back(
-        "drill_vel_joint",
-        hardware_interface::HW_IF_VELOCITY,
-        &drill_vel_cmd_);
-     command_interfaces.emplace_back(
-        "container_vel_joint",
-        hardware_interface::HW_IF_VELOCITY,
-        &container_vel_cmd_);
+    // command_interfaces.emplace_back(
+    //     "platform_vel_joint",
+    //     hardware_interface::HW_IF_VELOCITY,
+    //     &platform_vel_cmd_);
+    // command_interfaces.emplace_back(
+    //     "drill_vel_joint",
+    //     hardware_interface::HW_IF_VELOCITY,
+    //     &drill_vel_cmd_);
+    //  command_interfaces.emplace_back(
+    //     "container_vel_joint",
+    //     hardware_interface::HW_IF_VELOCITY,
+    //     &container_vel_cmd_);
     
     command_interfaces.emplace_back(
         "platform_joint",
@@ -356,47 +356,47 @@ hardware_interface::return_type SamplerHardware::read(const rclcpp::Time& /*time
     brush_rotor_vel_ = real_vel_[RosCanConstants::VescIds::sampler_vacuum_a];
   }
   //////////////////////
-  if (sim_positions_.find("platform_joint") != sim_positions_.end())
-  {
-      platform_pos_ = sim_positions_["platform_joint"];
-  }
-  if (sim_positions_.find("drill_joint") != sim_positions_.end())
-  {
-      drill_pos_ = sim_positions_["drill_joint"];
-  }
-  if (sim_positions_.find("container_joint") != sim_positions_.end())
-  {
-      container_pos_ = sim_positions_["container_joint"];
-  }
-  // if (sim_positions_.find("clamp_joint") != sim_positions_.end())
-  // {
-  //     clamp_pos_ = sim_positions_["clamp_joint"];
-  // }
+//   if (sim_positions_.find("platform_joint") != sim_positions_.end())
+//   {
+//       platform_pos_ = sim_positions_["platform_joint"];
+//   }
+//   if (sim_positions_.find("drill_joint") != sim_positions_.end())
+//   {
+//       drill_pos_ = sim_positions_["drill_joint"];
+//   }
+//   if (sim_positions_.find("container_joint") != sim_positions_.end())
+//   {
+//       container_pos_ = sim_positions_["container_joint"];
+//   }
+//   // if (sim_positions_.find("clamp_joint") != sim_positions_.end())
+//   // {
+//   //     clamp_pos_ = sim_positions_["clamp_joint"];
+//   // }
 
-  if (sim_vel_.find("platform_joint") != sim_vel_.end())
-  {
-      platform_vel_ = sim_vel_["platform_joint"];
-  }
-  if (sim_vel_.find("drill_joint") != sim_vel_.end())
-  {
-      drill_vel_ = sim_vel_["drill_joint"];
-  }
-  if (sim_vel_.find("container_joint") != sim_vel_.end())
-  {
-      container_vel_ = sim_vel_["container_joint"];
-  }
-  if (sim_vel_.find("rotor_joint") != sim_vel_.end())
-  {
-    rotor_vel_ = sim_vel_["rotor_joint"];
-  }
-  if (sim_vel_.find("vacuum_rotor_joint") != sim_vel_.end())
-  {
-    vacuum_rotor_vel_ = sim_vel_["vacuum_rotor_joint"];
-  }
-  if (sim_vel_.find("brush_rotor_joint") != sim_vel_.end())
-  {
-    brush_rotor_vel_ = sim_vel_["brush_rotor_joint"];
-  }
+//   if (sim_vel_.find("platform_joint") != sim_vel_.end())
+//   {
+//       platform_vel_ = sim_vel_["platform_joint"];
+//   }
+//   if (sim_vel_.find("drill_joint") != sim_vel_.end())
+//   {
+//       drill_vel_ = sim_vel_["drill_joint"];
+//   }
+//   if (sim_vel_.find("container_joint") != sim_vel_.end())
+//   {
+//       container_vel_ = sim_vel_["container_joint"];
+//   }
+//   if (sim_vel_.find("rotor_joint") != sim_vel_.end())
+//   {
+//     rotor_vel_ = sim_vel_["rotor_joint"];
+//   }
+//   if (sim_vel_.find("vacuum_rotor_joint") != sim_vel_.end())
+//   {
+//     vacuum_rotor_vel_ = sim_vel_["vacuum_rotor_joint"];
+//   }
+//   if (sim_vel_.find("brush_rotor_joint") != sim_vel_.end())
+//   {
+//     brush_rotor_vel_ = sim_vel_["brush_rotor_joint"];
+//   }
   // if (sim_vel_.find("clamp_joint") != sim_positions_.end())
   // {
   //     clamp_pos_ = sim_positions_["clamp_joint"];

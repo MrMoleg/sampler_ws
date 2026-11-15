@@ -24,7 +24,7 @@
                 <!-- Physical hardware -->
                 <xacro:if value="${not use_gazebo and not use_mock_hardware}">
                     <plugin>sampler_hardware_interfaces/SamplerHardware</plugin>
-                    <param name="can_interface">can0</param>
+                    <!-- <param name="can_interface">can0</param> -->
                 </xacro:if>
 
             </hardware>

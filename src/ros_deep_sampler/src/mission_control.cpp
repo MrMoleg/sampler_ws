@@ -39,21 +39,10 @@ namespace ros_deep_sampler{
     missionFeedbackMsg->control_type = MissionMsg::NO_SAMPLER;
     missionFeedbackMsg->autonomy_state = MissionMsg::STATE_IDLE;
 
-    // sampler_can_cmd_pub_ = get_node()->create_publisher<SamplerCanCmd>(
-    //         RosCanConstants::RosTopics::can_sampler_cmd,10);
-    
-    // rex_interfaces::msg::RoverStatus init_msg;
-    // init_msg.communication_state = RoverStatusMsg::COMMUNICATION_STATE_CLOSED;
-    // init_msg.pad_connected = false;
-    // init_msg.control_mode = RoverStatusMsg::CONTROL_MODE_ESTOP;
-    // LastStatusMsg = std::make_shared<const RoverStatusMsg>(init_msg);
-    // LastCtrlMsg = std::make_shared<const SamplerControlMsg>();
+   
 
     RCLCPP_INFO(this->get_logger(), "Constructor executed");
 
-    // mPubFeedback.platform_position = this->platform_position;
-    // mPubFeedback.drill_position = this->drill_position;
-    // mPubFeedback.drill_current = this->drill_velocity; 
   }
 
   void MissionControl::MissionUpdate()
@@ -159,57 +148,6 @@ void MissionControl::HandleMissionCmd(const MissionCmd& missionCmd)
         return;
     } 
 
-    if(ctrlType_ == ControlType::MANUAL){
-        if (missionCmd.platform_movement != NO_CMD)
-        {
-            missionCmdMsg->platform_movement = missionCmd.platform_movement;
-            platform_cmd_pending_ = true;
-        }
-
-        if (missionCmd.drill_movement != NO_CMD)
-        {
-            missionCmdMsg->drill_movement = missionCmd.drill_movement;
-            drill_cmd_pending_ = true;
-        }
-
-        if (missionCmd.container_degrees != NO_CMD)
-        {
-            missionCmdMsg->container_degrees = missionCmd.container_degrees;
-            container_cmd_pending_ = true;
-        }
-
-        if (missionCmd.drill_action != NO_CMD)
-        {
-            missionCmdMsg->drill_action = missionCmd.drill_action;
-            drill_rotor_cmd_pending_ = true;
-        }
-
-        if (missionCmd.vacuum_suction != NO_CMD)
-        {
-            missionCmdMsg->vacuum_suction = missionCmd.vacuum_suction;
-            vacuum_cmd_pending_ = true;
-        }
-
-        if (missionCmd.brush_rotation != NO_CMD)
-        {
-            missionCmdMsg->brush_rotation = missionCmd.brush_rotation;
-            brush_cmd_pending_ = true;
-        }
-
-        // if (missionCmd.open_vacuum)
-        // {
-        //     missionCmdMsg->open_vacuum = missionCmd.open_vacuum;
-        //     clamp_cmd_pending_ = true;
-        // }
-        missionCmdMsg->open_vacuum = missionCmd.open_vacuum;
-
-        missionCmdMsg->mission_cmd = MissionCmd::START;
-
-
-        retranslateSamplerCtrlMsg(missionCmdMsg);
-    }
-
-    //new_mission_cmd = true;
 }
 
 
@@ -222,7 +160,6 @@ void MissionControl::HandleRoverStatus(const RoverStatusMsg::ConstSharedPtr &rov
 {
     setControlType(roverStatusMsg);
 	// LastStatusMsg = roverStatusMsg;
-
 }
 
 void MissionControl::executeAutonomy(){
@@ -282,11 +219,6 @@ void MissionControl::calibrateSampler(){
     
 }
 
-void MissionControl::executeManual(){
-    
-    //retranslateSamplerCtrlMsg(missionCmdMsg);
-    return;
-}
 
 void MissionControl::abortExecuting(){
     stopExecuting();
@@ -296,163 +228,146 @@ void MissionControl::abortExecuting(){
 
 
 
-
-
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//   void MissionControl::HandleMeasurementFeedback(const MeasurementMsg::ConstSharedPtr &measurementMsg){
-//   weight_a = measurementMsg->weight_a;
-//   ph = measurementMsg->ph;
-// }
-
-// bool MissionControl::get_measurements(){
-//   if (weight_a != 0.0 && ph != 0.0){
-//     return true;
-//   }else{return false;}
-// }
-
 double MissionControl::getPlatformPosition(){
   return (double)sampler_state_.platform_position;
 }
 
 
-void MissionControl::retranslateSamplerCtrlMsg(
-    const MissionCmd::SharedPtr& missionCmd)
-{
-    if (ctrlType_ != ControlType::MANUAL)
-        return;
+// void MissionControl::retranslateSamplerCtrlMsg(
+//     const MissionCmd::SharedPtr& missionCmd)
+// {
+//     if (ctrlType_ != ControlType::MANUAL)
+//         return;
 
-    // if (!new_mission_cmd)
-    //     return;
+//     // if (!new_mission_cmd)
+//     //     return;
 
-    //new_mission_cmd = false;
+//     //new_mission_cmd = false;
 
-    if (missionCmd->velocity_ctrl){
-        double platform;
-        double drill;
-        double container;
-        joints_->setJointsVel(missionCmd->platform_movement,  missionCmd->drill_movement,
-                             missionCmd->container_degrees); // degrees as the velocity 
+//     if (missionCmd->velocity_ctrl){
+//         double platform;
+//         double drill;
+//         double container;
+//         joints_->setJointsVel(missionCmd->platform_movement,  missionCmd->drill_movement,
+//                              missionCmd->container_degrees); // degrees as the velocity 
 
-        if(platform_cmd_pending_){
-            platform = missionCmd->platform_movement;
-            platform_cmd_pending_ = false;
-        }else{platform = 0.0;}
-        if(drill_cmd_pending_){
-            drill = missionCmd->drill_movement;
-            drill_cmd_pending_ = false;
-        }else{drill = 0.0;}
-        if(container_cmd_pending_){
-            container = missionCmd->drill_movement;
-            container_cmd_pending_ = false;
-        }else{container = 0.0;}
+//         if(platform_cmd_pending_){
+//             platform = missionCmd->platform_movement;
+//             platform_cmd_pending_ = false;
+//         }else{platform = 0.0;}
+//         if(drill_cmd_pending_){
+//             drill = missionCmd->drill_movement;
+//             drill_cmd_pending_ = false;
+//         }else{drill = 0.0;}
+//         if(container_cmd_pending_){
+//             container = missionCmd->drill_movement;
+//             container_cmd_pending_ = false;
+//         }else{container = 0.0;}
         
-        joints_->setJointsVel(platform, drill, container);
-    }else{
-        joints_->setJointsVel(0.0, 0.0, 0.0);
-        std::vector<JointMovement::JointCommand> commands;
+//         joints_->setJointsVel(platform, drill, container);
+//     }else{
+//         joints_->setJointsVel(0.0, 0.0, 0.0);
+//         std::vector<JointMovement::JointCommand> commands;
 
-        if(platform_cmd_pending_){
-        commands.push_back({
-            JointMovement::JointsIds::PLATFORM,
-            joints_->get_current_position(
-                JointMovement::JointsIds::PLATFORM),
-            missionCmd->platform_movement,
-            0.2});
-            platform_cmd_pending_ = false;
-        }else{
-            commands.push_back({
-                JointMovement::JointsIds::PLATFORM,
-                joints_->get_current_position(
-                    JointMovement::JointsIds::PLATFORM),
-                joints_->get_current_position(
-                    JointMovement::JointsIds::PLATFORM),
-                0.2});
-        }
+//         if(platform_cmd_pending_){
+//         commands.push_back({
+//             JointMovement::JointsIds::PLATFORM,
+//             joints_->get_current_position(
+//                 JointMovement::JointsIds::PLATFORM),
+//             missionCmd->platform_movement,
+//             0.2});
+//             platform_cmd_pending_ = false;
+//         }else{
+//             commands.push_back({
+//                 JointMovement::JointsIds::PLATFORM,
+//                 joints_->get_current_position(
+//                     JointMovement::JointsIds::PLATFORM),
+//                 joints_->get_current_position(
+//                     JointMovement::JointsIds::PLATFORM),
+//                 0.2});
+//         }
     
 
-        if(drill_cmd_pending_){
-            commands.push_back({
-                JointMovement::JointsIds::DRILL,
-                joints_->get_current_position(
-                    JointMovement::JointsIds::DRILL),
-                missionCmd->drill_movement,
-                0.2});
-            drill_cmd_pending_ = false;
-            }else{
-                commands.push_back({
-                    JointMovement::JointsIds::DRILL,
-                    joints_->get_current_position(
-                        JointMovement::JointsIds::DRILL),
-                    joints_->get_current_position(
-                        JointMovement::JointsIds::DRILL),
-                    0.2});
-            }
+//         if(drill_cmd_pending_){
+//             commands.push_back({
+//                 JointMovement::JointsIds::DRILL,
+//                 joints_->get_current_position(
+//                     JointMovement::JointsIds::DRILL),
+//                 missionCmd->drill_movement,
+//                 0.2});
+//             drill_cmd_pending_ = false;
+//             }else{
+//                 commands.push_back({
+//                     JointMovement::JointsIds::DRILL,
+//                     joints_->get_current_position(
+//                         JointMovement::JointsIds::DRILL),
+//                     joints_->get_current_position(
+//                         JointMovement::JointsIds::DRILL),
+//                     0.2});
+//             }
 
-    if(container_cmd_pending_){
-            commands.push_back({
-            JointMovement::JointsIds::CONTAINER,
-            joints_->get_current_position(
-                JointMovement::JointsIds::CONTAINER),
-            missionCmd->container_degrees,
-            0.2});
-        container_cmd_pending_ = false;
-        }else{
-            commands.push_back({
-                JointMovement::JointsIds::CONTAINER,
-                joints_->get_current_position(
-                    JointMovement::JointsIds::CONTAINER),
-                joints_->get_current_position(
-                    JointMovement::JointsIds::CONTAINER),
-                0.2});
-        }
+//     if(container_cmd_pending_){
+//             commands.push_back({
+//             JointMovement::JointsIds::CONTAINER,
+//             joints_->get_current_position(
+//                 JointMovement::JointsIds::CONTAINER),
+//             missionCmd->container_degrees,
+//             0.2});
+//         container_cmd_pending_ = false;
+//         }else{
+//             commands.push_back({
+//                 JointMovement::JointsIds::CONTAINER,
+//                 joints_->get_current_position(
+//                     JointMovement::JointsIds::CONTAINER),
+//                 joints_->get_current_position(
+//                     JointMovement::JointsIds::CONTAINER),
+//                 0.2});
+//         }
 
-        joints_->moveJoints(commands);
-    }
+//         joints_->moveJoints(commands);
+//     }
 
-    // Rotors
-    if(drill_rotor_cmd_pending_){
-        joints_->send_rotor_velocity(
-            JointMovement::JointsIds::DRILL_ROTOR,
-            missionCmd->drill_action);
-        drill_rotor_cmd_pending_ = false;
-    }else{
-        joints_->send_rotor_velocity(
-            JointMovement::JointsIds::DRILL_ROTOR,
-            joints_->get_current_velocity(JointMovement::JointsIds::DRILL_ROTOR));
-    }
+//     // Rotors
+//     if(drill_rotor_cmd_pending_){
+//         joints_->send_rotor_velocity(
+//             JointMovement::JointsIds::DRILL_ROTOR,
+//             missionCmd->drill_action);
+//         drill_rotor_cmd_pending_ = false;
+//     }else{
+//         joints_->send_rotor_velocity(
+//             JointMovement::JointsIds::DRILL_ROTOR,
+//             joints_->get_current_velocity(JointMovement::JointsIds::DRILL_ROTOR));
+//     }
 
-    if(vacuum_cmd_pending_){
-        joints_->send_rotor_velocity(
-            JointMovement::JointsIds::VACUUM_ROTOR,
-            missionCmd->vacuum_suction);
-        vacuum_cmd_pending_ = false;
-    }else{
-        joints_->send_rotor_velocity(
-            JointMovement::JointsIds::VACUUM_ROTOR,
-            joints_->get_current_velocity(JointMovement::JointsIds::VACUUM_ROTOR));
-    }
+//     if(vacuum_cmd_pending_){
+//         joints_->send_rotor_velocity(
+//             JointMovement::JointsIds::VACUUM_ROTOR,
+//             missionCmd->vacuum_suction);
+//         vacuum_cmd_pending_ = false;
+//     }else{
+//         joints_->send_rotor_velocity(
+//             JointMovement::JointsIds::VACUUM_ROTOR,
+//             joints_->get_current_velocity(JointMovement::JointsIds::VACUUM_ROTOR));
+//     }
 
-    if(brush_cmd_pending_){
-        joints_->send_rotor_velocity(
-            JointMovement::JointsIds::BRUSH_ROTOR,
-            missionCmd->brush_rotation);
-        brush_cmd_pending_ = false;
-    }else{
-        joints_->send_rotor_velocity(
-            JointMovement::JointsIds::BRUSH_ROTOR,
-            joints_->get_current_velocity(JointMovement::JointsIds::BRUSH_ROTOR));
-    }
+//     if(brush_cmd_pending_){
+//         joints_->send_rotor_velocity(
+//             JointMovement::JointsIds::BRUSH_ROTOR,
+//             missionCmd->brush_rotation);
+//         brush_cmd_pending_ = false;
+//     }else{
+//         joints_->send_rotor_velocity(
+//             JointMovement::JointsIds::BRUSH_ROTOR,
+//             joints_->get_current_velocity(JointMovement::JointsIds::BRUSH_ROTOR));
+//     }
 
-    if(missionCmd->open_vacuum){
-        joints_->open_clamp();
-    }else{
-       joints_->close_clamp();
-    }
+//     if(missionCmd->open_vacuum){
+//         joints_->open_clamp();
+//     }else{
+//        joints_->close_clamp();
+//     }
     
-}
+// }
 
 
 // bool MissionControl::drillStuck(){

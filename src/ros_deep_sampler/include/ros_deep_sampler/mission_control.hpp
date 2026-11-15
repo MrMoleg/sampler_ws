@@ -102,7 +102,7 @@ private:
     // Execution modes
     // =========================================================
 
-    void executeManual();
+    //void executeManual();
 
     void executeAutonomy();
 
@@ -121,7 +121,7 @@ private:
     // Manual control
     // =========================================================
 
-    void retranslateSamplerCtrlMsg(const MissionCmd::SharedPtr &missionCmd);
+    //void retranslateSamplerCtrlMsg(const MissionCmd::SharedPtr &missionCmd);
 
 
     // =========================================================
