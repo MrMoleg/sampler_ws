@@ -46,46 +46,13 @@ class  JointMovement{
             bool calibration = false;
         };
 
-        struct MotionProfile
-        {
-            double start;
-            double goal;
-
-            double direction;
-
-            double accel;
-            double accel_time;
-
-            double accel_dist;
-
-            double cruise_dist;
-            double cruise_time;
-
-            double max_velocity;
-
-            double total_time;
-        };
-
-        MotionProfile createProfile(const JointCommand& cmd, double accel_time);
-        void evaluateProfile(
-            const MotionProfile& p,
-            double t,
-            double& pos,
-            double& vel);
-        void generateMultiJointsTrajectory(trajectory_msgs::msg::JointTrajectory &traj,
-             const std::vector<JointCommand>& commands,
-             double accel_time,
-             double dt);
+        
         void moveJoints(const std::vector<JointCommand>& commands);
 
-        void movePlatform(double pos, double vel);
         void calibratePlatform(double vel);
-        void moveDrill(double pos, double vel, bool calibrated);
         void calibrateDrill(double vel);
-        void moveContainer(double pos, double vel, bool calibrated);
         void calibrateContainer(double vel);
         void calibrateJoints(double vel);
-        std::vector<double> linspace(double start_in, double end_in, int num_in);
 
         void moveJoint(const std::vector<JointCommand>& commands);
         std::string getJointName(JointsIds id);
@@ -94,18 +61,10 @@ class  JointMovement{
         void stopMotors();
 
 
-        void generateTraj1(trajectory_msgs::msg::JointTrajectory &traj,
+        void generateTraj(trajectory_msgs::msg::JointTrajectory &traj,
              const std::vector<JointCommand>& commands);
         void sendTrajectory(trajectory_msgs::msg::JointTrajectory &traj);
-        void generateTrajectory(
-            trajectory_msgs::msg::JointTrajectory &traj,
-            const std::string &joint_name,
-            double start_pos,
-            double final_pos,
-            double max_velocity,
-            bool is_calibration,
-            double accel_time = 0.5,
-            double dt = 0.02);
+        
         void setTrajectoryStatus(bool status);
         void open_clamp();
         void close_clamp();
