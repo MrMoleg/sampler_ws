@@ -12,7 +12,7 @@
 #include "control_msgs/action/follow_joint_trajectory.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "std_msgs/msg/float64.hpp"
-
+#include <algorithm>
 #include "rex_interfaces/msg/sampler_control.hpp"
 #include "rex_interfaces/msg/sampler_feedback.hpp"
 #include "rex_interfaces/msg/sampler_can_status.hpp"
@@ -42,12 +42,12 @@ class  JointMovement{
             JointsIds id;
             double start_position;
             double final_position;
-            double max_velocity;
+            double traj_time;
             bool calibration = false;
         };
 
         
-        void moveJoints(const std::vector<JointCommand>& commands);
+        void moveJoints(const std::vector<JointCommand>& commands, bool use_same_time);
 
         void calibratePlatform(double vel);
         void calibrateDrill(double vel);
@@ -62,16 +62,17 @@ class  JointMovement{
 
 
         void generateTraj(trajectory_msgs::msg::JointTrajectory &traj,
-             const std::vector<JointCommand>& commands);
+             const std::vector<JointCommand>& commands, bool use_same_time);
         void sendTrajectory(trajectory_msgs::msg::JointTrajectory &traj);
         
         void setTrajectoryStatus(bool status);
         void open_clamp();
         void close_clamp();
         void setJointsVel(double platform, double drill, double container);
-
+        
         //ACTION_TUTORIALS_CPP_PUBLIC
-        void JointStateFeedback(MissionMsg::SharedPtr &feedbackMsg);
+        void jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr msg);
+        void JointGoalStateFeedback(MissionMsg::SharedPtr &feedbackMsg);
         double get_current_position(JointsIds id);
         double get_current_velocity(JointsIds id);
         bool get_end_switch_state(JointsIds id);
@@ -89,8 +90,8 @@ class  JointMovement{
         void setGoalStatus(bool status);
         void stop_movement();
       
-        void jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr msg);
-        void feedbackCallback(const SamplerCanFeedback::SharedPtr msg);
+       
+        
 
 
         using FollowJointTrajectory =

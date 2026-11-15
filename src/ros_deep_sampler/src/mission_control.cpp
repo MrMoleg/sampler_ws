@@ -399,7 +399,7 @@ void MissionControl::getFeedback(MissionMsg::SharedPtr &missionFeedback, JointMo
   missionFeedback->brush_rot_vel = joints_.get_current_velocity(JointMovement::JointsIds::BRUSH_ROTOR);
   missionFeedback->vacuum_suction_vel = joints_.get_current_velocity(JointMovement::JointsIds::VACUUM_ROTOR);
   missionFeedback->container_pos = joints_.get_current_velocity(JointMovement::JointsIds::CONTAINER);
-  joints_.JointStateFeedback(missionFeedback);
+  joints_.JointGoalStateFeedback(missionFeedback);
 }
 
 

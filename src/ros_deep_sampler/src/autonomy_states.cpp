@@ -70,22 +70,22 @@ void AutonomyController::executeAutonomy(SamplerState& sampler, const MissionCmd
           cmd.id = JointMovement::JointsIds::PLATFORM;
           cmd.start_position = joints_.get_current_position(cmd.id);
           cmd.final_position = -1* sampler.distance_to_ground;
-          cmd.max_velocity = 0.1;
+          cmd.traj_time = JOINTS_CROUISE_TIME;
           commands.push_back(cmd);
   
           cmd.id = JointMovement::JointsIds::DRILL;
           cmd.start_position = joints_.get_current_position(cmd.id);
           cmd.final_position = joints_.get_current_position(cmd.id);
-          cmd.max_velocity = 0.2;
+          cmd.traj_time = JOINTS_CROUISE_TIME;
           commands.push_back(cmd);
 
           cmd.id = JointMovement::JointsIds::CONTAINER;
           cmd.start_position = joints_.get_current_position(cmd.id);
           cmd.final_position = joints_.get_current_position(cmd.id);
-          cmd.max_velocity = 0.2;
+          cmd.traj_time = JOINTS_CROUISE_TIME;
           commands.push_back(cmd);
 
-          joints_.moveJoints(commands);
+          joints_.moveJoints(commands, true);
           goal_sent = true;
         }
         
@@ -132,21 +132,21 @@ void AutonomyController::executeAutonomy(SamplerState& sampler, const MissionCmd
           cmd.id = JointMovement::JointsIds::PLATFORM;
           cmd.start_position = joints_.get_current_position(cmd.id);
           cmd.final_position = joints_.get_current_position(cmd.id);
-          cmd.max_velocity = 0.1;
+          cmd.traj_time = JOINTS_CROUISE_TIME;;
           commands.push_back(cmd);
   
           cmd.id = JointMovement::JointsIds::DRILL;
           cmd.start_position = joints_.get_current_position(cmd.id);
           cmd.final_position = MAX_UNDEGROUND_POS;
-          cmd.max_velocity = 0.1;
+          cmd.traj_time = JOINTS_CROUISE_TIME;
           commands.push_back(cmd);
 
           cmd.id = JointMovement::JointsIds::CONTAINER;
           cmd.start_position = joints_.get_current_position(cmd.id);
           cmd.final_position = joints_.get_current_position(cmd.id);
-          cmd.max_velocity = 0.2;
+          cmd.traj_time = JOINTS_CROUISE_TIME;
           commands.push_back(cmd);
-          joints_.moveJoints(commands);
+          joints_.moveJoints(commands, true);
           joints_.send_rotor_velocity(JointMovement::JointsIds::DRILL_ROTOR, 15.0);
           sampler.rotor_in_action = true;
           goal_sent = true;
@@ -192,21 +192,21 @@ void AutonomyController::executeAutonomy(SamplerState& sampler, const MissionCmd
             cmd.id = JointMovement::JointsIds::PLATFORM;
             cmd.start_position = joints_.get_current_position(cmd.id);
             cmd.final_position = joints_.get_current_position(cmd.id);
-            cmd.max_velocity = 0.1;
+            cmd.traj_time = JOINTS_CROUISE_TIME;
             commands.push_back(cmd);
     
             cmd.id = JointMovement::JointsIds::DRILL;
             cmd.start_position = joints_.get_current_position(cmd.id);
             cmd.final_position = HOME_POS;
-            cmd.max_velocity = 0.1;
+            cmd.traj_time =  JOINTS_CROUISE_TIME;
             commands.push_back(cmd);
 
             cmd.id = JointMovement::JointsIds::CONTAINER;
             cmd.start_position = joints_.get_current_position(cmd.id);
             cmd.final_position = joints_.get_current_position(cmd.id);
-            cmd.max_velocity = 0.2;
+            cmd.traj_time = JOINTS_CROUISE_TIME;
             commands.push_back(cmd);
-            joints_.moveJoints(commands);
+            joints_.moveJoints(commands, true);
             goal_sent = true;
           }
           
@@ -231,21 +231,21 @@ void AutonomyController::executeAutonomy(SamplerState& sampler, const MissionCmd
               cmd.id = JointMovement::JointsIds::PLATFORM;
               cmd.start_position = joints_.get_current_position(cmd.id);
               cmd.final_position = HOME_POS;
-              cmd.max_velocity = 0.1;
+              cmd.traj_time = JOINTS_CROUISE_TIME;
               commands.push_back(cmd);
       
               cmd.id = JointMovement::JointsIds::DRILL;
               cmd.start_position = joints_.get_current_position(cmd.id);
               cmd.final_position = joints_.get_current_position(cmd.id);
-              cmd.max_velocity = 0.1;
+              cmd.traj_time = JOINTS_CROUISE_TIME;
               commands.push_back(cmd);
 
               cmd.id = JointMovement::JointsIds::CONTAINER;
               cmd.start_position = joints_.get_current_position(cmd.id);
               cmd.final_position = joints_.get_current_position(cmd.id);
-              cmd.max_velocity = 0.2;
+              cmd.traj_time = JOINTS_CROUISE_TIME;
               commands.push_back(cmd);
-              joints_.moveJoints(commands);
+              joints_.moveJoints(commands, true);
               goal_sent = true;
             }
             
@@ -270,21 +270,21 @@ void AutonomyController::executeAutonomy(SamplerState& sampler, const MissionCmd
             cmd.id = JointMovement::JointsIds::PLATFORM;
             cmd.start_position = joints_.get_current_position(cmd.id);
             cmd.final_position = joints_.get_current_position(cmd.id);
-            cmd.max_velocity = 0.1;
+            cmd.traj_time = JOINTS_CROUISE_TIME;
             commands.push_back(cmd);
     
             cmd.id = JointMovement::JointsIds::DRILL;
             cmd.start_position = joints_.get_current_position(cmd.id);
             cmd.final_position = joints_.get_current_position(cmd.id);
-            cmd.max_velocity = 0.1;
+            cmd.traj_time = JOINTS_CROUISE_TIME;
             commands.push_back(cmd);
 
             cmd.id = JointMovement::JointsIds::CONTAINER;
             cmd.start_position = joints_.get_current_position(cmd.id);
             cmd.final_position = DEEP_SAMPLER_COLLECT_POS;
-            cmd.max_velocity = 0.6;
+            cmd.traj_time = JOINTS_CROUISE_TIME;
             commands.push_back(cmd);
-            joints_.moveJoints(commands);
+            joints_.moveJoints(commands, true);
             goal_sent = true;
           }
 
@@ -308,21 +308,21 @@ void AutonomyController::executeAutonomy(SamplerState& sampler, const MissionCmd
                 cmd.id = JointMovement::JointsIds::PLATFORM;
                 cmd.start_position = joints_.get_current_position(cmd.id);
                 cmd.final_position = joints_.get_current_position(cmd.id);
-                cmd.max_velocity = 0.1;
+                cmd.traj_time = JOINTS_CROUISE_TIME;
                 commands.push_back(cmd);
         
                 cmd.id = JointMovement::JointsIds::DRILL;
                 cmd.start_position = joints_.get_current_position(cmd.id);
                 cmd.final_position = DRILL_TO_CONTAINER;
-                cmd.max_velocity = 0.1;
+                cmd.traj_time = JOINTS_CROUISE_TIME;
                 commands.push_back(cmd);
 
                 cmd.id = JointMovement::JointsIds::CONTAINER;
                 cmd.start_position = joints_.get_current_position(cmd.id);
                 cmd.final_position = joints_.get_current_position(cmd.id);
-                cmd.max_velocity = 0.6;
+                cmd.traj_time = JOINTS_CROUISE_TIME;
                 commands.push_back(cmd);
-                joints_.moveJoints(commands);
+                joints_.moveJoints(commands, true);
                 // move_client_->send_goal(commands);
                 goal_sent = true;
               }
@@ -363,21 +363,21 @@ void AutonomyController::executeAutonomy(SamplerState& sampler, const MissionCmd
                 cmd.id = JointMovement::JointsIds::PLATFORM;
                 cmd.start_position = joints_.get_current_position(cmd.id);
                 cmd.final_position = joints_.get_current_position(cmd.id);
-                cmd.max_velocity = 0.1;
+                cmd.traj_time = JOINTS_CROUISE_TIME;
                 commands.push_back(cmd);
         
                 cmd.id = JointMovement::JointsIds::DRILL;
                 cmd.start_position = joints_.get_current_position(cmd.id);
                 cmd.final_position = HOME_POS;
-                cmd.max_velocity = 0.1;
+                cmd.traj_time = JOINTS_CROUISE_TIME;
                 commands.push_back(cmd);
 
                 cmd.id = JointMovement::JointsIds::CONTAINER;
                 cmd.start_position = joints_.get_current_position(cmd.id);
                 cmd.final_position = joints_.get_current_position(cmd.id);
-                cmd.max_velocity = 0.6;
+                cmd.traj_time = JOINTS_CROUISE_TIME;
                 commands.push_back(cmd);
-                joints_.moveJoints(commands);
+                joints_.moveJoints(commands, true);
                 // move_client_->send_goal(commands);
                 goal_sent = true;
               }
@@ -401,21 +401,21 @@ void AutonomyController::executeAutonomy(SamplerState& sampler, const MissionCmd
                 cmd.id = JointMovement::JointsIds::PLATFORM;
                 cmd.start_position = joints_.get_current_position(cmd.id);
                 cmd.final_position = PLATFORM_TO_CONTAINER;
-                cmd.max_velocity = 0.1;
+                cmd.traj_time = JOINTS_SHORT_CROUISE_TIME;
                 commands.push_back(cmd);
         
                 cmd.id = JointMovement::JointsIds::DRILL;
                 cmd.start_position = joints_.get_current_position(cmd.id);
                 cmd.final_position = joints_.get_current_position(cmd.id);
-                cmd.max_velocity = 0.1;
+                cmd.traj_time = JOINTS_SHORT_CROUISE_TIME;
                 commands.push_back(cmd);
 
                 cmd.id = JointMovement::JointsIds::CONTAINER;
                 cmd.start_position = joints_.get_current_position(cmd.id);
                 cmd.final_position = SURFACE_SAMPLER_COLLECT_POS;
-                cmd.max_velocity = 0.6;
+                cmd.traj_time = JOINTS_SHORT_CROUISE_TIME;
                 commands.push_back(cmd);
-                joints_.moveJoints(commands);
+                joints_.moveJoints(commands, true);
                 goal_sent = true;
               }
             if(joints_.isTrajectoryFinished() ==1){
@@ -457,21 +457,21 @@ void AutonomyController::executeAutonomy(SamplerState& sampler, const MissionCmd
                 cmd.id = JointMovement::JointsIds::PLATFORM;
                 cmd.start_position = joints_.get_current_position(cmd.id);
                 cmd.final_position = HOME_POS;
-                cmd.max_velocity = 0.2;
+                cmd.traj_time = JOINTS_SHORT_CROUISE_TIME;
                 commands.push_back(cmd);
         
                 cmd.id = JointMovement::JointsIds::DRILL;
                 cmd.start_position = joints_.get_current_position(cmd.id);
                 cmd.final_position = HOME_POS;
-                cmd.max_velocity = 0.1;
+                cmd.traj_time = JOINTS_SHORT_CROUISE_TIME;
                 commands.push_back(cmd);
 
                 cmd.id = JointMovement::JointsIds::CONTAINER;
                 cmd.start_position = joints_.get_current_position(cmd.id);
                 cmd.final_position = HOME_POS;
-                cmd.max_velocity = 0.6;
+                cmd.traj_time = JOINTS_SHORT_CROUISE_TIME;
                 commands.push_back(cmd);
-                joints_.moveJoints(commands);
+                joints_.moveJoints(commands, true);
                 // move_client_->send_goal(commands);
                 goal_sent = true;
               }
@@ -496,7 +496,7 @@ void AutonomyController::executeAutonomy(SamplerState& sampler, const MissionCmd
         //         JointMovement::JointCommand cmd;
         //         cmd.id = JointMovement::JointsIds::CONTAINER;
         //         cmd.position = 0.01;
-        //         cmd.max_velocity = 0.6;
+        //         cmd.traj_time = 0.6;
         //         commands.push_back(cmd);
         //         joints_.moveJoints(commands);
         //         goal_sent = true;
@@ -537,105 +537,105 @@ void AutonomyController::executeAutonomy(SamplerState& sampler, const MissionCmd
             
         break;
 
-        case AutonomyStates::RECOVER_DRILL:
-          if (recovery_attempt > MAX_RECOVERY_ATTEMPT){
-              //state_to_abort_ = state_;
-              stop(joints_);
-              resetStateVariables();
-              state_ = AutonomyStates::ABORT;
-              break;
-            }
+        // case AutonomyStates::RECOVER_DRILL:
+        //   if (recovery_attempt > MAX_RECOVERY_ATTEMPT){
+        //       //state_to_abort_ = state_;
+        //       stop(joints_);
+        //       resetStateVariables();
+        //       state_ = AutonomyStates::ABORT;
+        //       break;
+        //     }
 
-          switch(recover_state_){
-            case RecoverState::LIFT_UP:
-            if(!goal_sent){
-              RCLCPP_INFO(logger, "Lift drill a bit up to recover");
-              JointMovement::JointCommand cmd;
-              cmd.id = JointMovement::JointsIds::PLATFORM;
-              cmd.start_position = joints_.get_current_position(cmd.id);
-              cmd.final_position = joints_.get_current_position(cmd.id);
-              cmd.max_velocity = 0.1;
-              commands.push_back(cmd);
+        //   switch(recover_state_){
+        //     case RecoverState::LIFT_UP:
+        //     if(!goal_sent){
+        //       RCLCPP_INFO(logger, "Lift drill a bit up to recover");
+        //       JointMovement::JointCommand cmd;
+        //       cmd.id = JointMovement::JointsIds::PLATFORM;
+        //       cmd.start_position = joints_.get_current_position(cmd.id);
+        //       cmd.final_position = joints_.get_current_position(cmd.id);
+        //       cmd.traj_time = 0.1;
+        //       commands.push_back(cmd);
       
-              cmd.id = JointMovement::JointsIds::DRILL;
-              cmd.start_position = joints_.get_current_position(cmd.id);
-              cmd.final_position = joints_.get_current_position(cmd.id) + 0.01;
-              cmd.max_velocity = 0.1;
-              commands.push_back(cmd);
+        //       cmd.id = JointMovement::JointsIds::DRILL;
+        //       cmd.start_position = joints_.get_current_position(cmd.id);
+        //       cmd.final_position = joints_.get_current_position(cmd.id) + 0.01;
+        //       cmd.traj_time = 0.1;
+        //       commands.push_back(cmd);
 
-              cmd.id = JointMovement::JointsIds::CONTAINER;
-              cmd.start_position = joints_.get_current_position(cmd.id);
-              cmd.final_position = joints_.get_current_position(cmd.id);
-              cmd.max_velocity = 0.6;
-              commands.push_back(cmd);
-              joints_.moveJoints(commands);
+        //       cmd.id = JointMovement::JointsIds::CONTAINER;
+        //       cmd.start_position = joints_.get_current_position(cmd.id);
+        //       cmd.final_position = joints_.get_current_position(cmd.id);
+        //       cmd.traj_time = 0.6;
+        //       commands.push_back(cmd);
+        //       joints_.moveJoints(commands);
 
-              joints_.send_rotor_velocity(JointMovement::JointsIds::DRILL_ROTOR, -6.0);
-              // move_client_->send_goal(commands);
-              goal_sent = true;
-            }
+        //       joints_.send_rotor_velocity(JointMovement::JointsIds::DRILL_ROTOR, -6.0);
+        //       // move_client_->send_goal(commands);
+        //       goal_sent = true;
+        //     }
 
-            if(joints_.isTrajectoryFinished() ==1){
-              time_between_states++;
-              if(time_between_states > WAIT_TIME_BEETWEN_STATES/2){
-                RCLCPP_INFO(logger, "Finishing moving up");
-                time_between_states = 0;
-                rotation_time = 0;
-                goal_sent = false;
-                joints_.setTrajectoryStatus(false);
-                joints_.stopMotors();
-                commands.clear();
-                recover_state_ = RecoverState::WAIT;
-                break;
-              }
-            }
-            break;
+        //     if(joints_.isTrajectoryFinished() ==1){
+        //       time_between_states++;
+        //       if(time_between_states > WAIT_TIME_BEETWEN_STATES/2){
+        //         RCLCPP_INFO(logger, "Finishing moving up");
+        //         time_between_states = 0;
+        //         rotation_time = 0;
+        //         goal_sent = false;
+        //         joints_.setTrajectoryStatus(false);
+        //         joints_.stopMotors();
+        //         commands.clear();
+        //         recover_state_ = RecoverState::WAIT;
+        //         break;
+        //       }
+        //     }
+        //     break;
 
-            case RecoverState::WAIT:
+        //     case RecoverState::WAIT:
 
-                rotation_time++;
+        //         rotation_time++;
 
-                joints_.send_rotor_velocity(JointMovement::JointsIds::DRILL_ROTOR, 6.0);
+        //         joints_.send_rotor_velocity(JointMovement::JointsIds::DRILL_ROTOR, 6.0);
 
-                if (rotation_time > POUR_TIME) {
+        //         if (rotation_time > POUR_TIME) {
 
-                    if (sampler.drill_stuck_) {
+        //             if (sampler.drill_stuck_) {
 
-                        RCLCPP_WARN(
-                            logger,
-                            "Drill is still stuck");
+        //                 RCLCPP_WARN(
+        //                     logger,
+        //                     "Drill is still stuck");
 
-                        joints_.stopMotors();
+        //                 joints_.stopMotors();
 
-                        recovery_attempt++;
+        //                 recovery_attempt++;
 
-                        rotation_time = 0;
-                        goal_sent = false;
-                        commands.clear();
+        //                 rotation_time = 0;
+        //                 goal_sent = false;
+        //                 commands.clear();
 
-                        recover_state_ = RecoverState::LIFT_UP;
+        //                 recover_state_ = RecoverState::LIFT_UP;
 
-                    } else {
+        //             } else {
 
-                        RCLCPP_INFO(
-                            logger,
-                            "Drill recovered");
+        //                 RCLCPP_INFO(
+        //                     logger,
+        //                     "Drill recovered");
 
-                        joints_.stopMotors();
+        //                 joints_.stopMotors();
 
-                        rotation_time = 0;
-                        goal_sent = false;
-                        commands.clear();
+        //                 rotation_time = 0;
+        //                 goal_sent = false;
+        //                 commands.clear();
 
-                        state_ = state_to_recover_;
-                    }
-                }
+        //                 state_ = state_to_recover_;
+        //             }
+        //         }
 
-            break;
-          }
+        //     break;
+        //   }
           
 
-        break;
+        // break;
 
       //   case AutonomyStates::STOP:
       //     if(!mission_in_stop){

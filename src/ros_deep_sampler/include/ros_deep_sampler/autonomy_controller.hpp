@@ -36,7 +36,9 @@ struct SamplerState
 
     RoverStatusMsg::ConstSharedPtr rover_status;
     SamplerControlMsg::ConstSharedPtr sampler_control;
+
 };
+
 
 
 class AutonomyController
@@ -167,6 +169,8 @@ private:
     static constexpr double SURFACE_SAMPLER_COLLECT_POS = -1.35;
     static constexpr double DRILL_TO_CONTAINER = -0.15;
     static constexpr double PLATFORM_TO_CONTAINER = -0.2;
+    static constexpr double JOINTS_CROUISE_TIME = 10.0;
+    static constexpr double JOINTS_SHORT_CROUISE_TIME = 5.0;
 
 
 

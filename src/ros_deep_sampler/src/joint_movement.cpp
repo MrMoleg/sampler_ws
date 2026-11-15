@@ -36,9 +36,7 @@ JointMovement::JointMovement(rclcpp::Node *node)
                 this,
                 std::placeholders::_1));
 
-    sampler_can_feedback_sub_ = node_->create_subscription<SamplerCanFeedback>(
-            RosCanConstants::RosTopics::can_sampler_feedback, 10,
-            std::bind(&JointMovement::feedbackCallback, this, std::placeholders::_1));
+
 
     can_id_to_joint_id[RosCanConstants::VescIds::sampler_platform] = JointsIds::PLATFORM;
     can_id_to_joint_id[RosCanConstants::VescIds::sampler_drill_mov] = JointsIds::DRILL;
@@ -63,23 +61,11 @@ void JointMovement::jointStateCallback(const sensor_msgs::msg::JointState::Share
     
   }
 
-void JointMovement::feedbackCallback(const SamplerCanFeedback::SharedPtr msg){
-    for (size_t i = 0; i < msg->actuator_id.size(); ++i) {
-        const JointsIds & name = can_id_to_joint_id[msg->actuator_id[i]];
-        real_current_position_[name] = msg->positions[i];
-        real_current_velocity_[name] = msg->velocities[i];
-        end_switch_state[name] = msg->end_switches[i];
-    }
-
-    rotor_effort = msg->rotor_effort;
-    distance_to_ground = msg->distance_sensor;
-}
-
 
 
 double JointMovement::get_current_position(JointsIds id){
-  if(sim_hardware){
-     if(id == JointsIds::PLATFORM){
+ 
+    if(id == JointsIds::PLATFORM){
         return current_position_["platform_joint"];
     }
     if(id == JointsIds::DRILL){
@@ -88,15 +74,12 @@ double JointMovement::get_current_position(JointsIds id){
     if(id == JointsIds::CONTAINER){
         return current_position_["container_joint"];
     }
-  }else{
-    return real_current_position_[id];
-  }
- 
+  
 
 }
 double JointMovement::get_current_velocity(JointsIds id){
-  if (sim_hardware){
-     if(id == JointsIds::PLATFORM){
+ 
+    if(id == JointsIds::PLATFORM){
         return current_velocity_["platform_joint"];
     }
     if(id == JointsIds::DRILL){
@@ -114,9 +97,6 @@ double JointMovement::get_current_velocity(JointsIds id){
     if(id == JointsIds::BRUSH_ROTOR){
         return current_velocity_["brush_rotor_joint"];
     }
-  }else{
-    return real_current_velocity_[id];
-  }
   
 }
 
@@ -166,91 +146,131 @@ void JointMovement::close_clamp(){
     clamp_cmd_pub_->publish(msg);
 }
 
-void JointMovement::setJointsVel(double platform, double drill, double container){
-    std_msgs::msg::Float64MultiArray msg;
+// void JointMovement::setJointsVel(double platform, double drill, double container){
+//     std_msgs::msg::Float64MultiArray msg;
 
-        msg.data = {
-            platform,   // platform [m/s]
-            drill,   // drill [m/s]
-            container    // container [rad/s]
-        };
+//         msg.data = {
+//             platform,   // platform [m/s]
+//             drill,   // drill [m/s]
+//             container    // container [rad/s]
+//         };
 
-        joints_vel_pub_->publish(msg);
-}
+//         joints_vel_pub_->publish(msg);
+// }
 
 
 
-void JointMovement::generateTraj(trajectory_msgs::msg::JointTrajectory &traj,
-             const std::vector<JointCommand>& commands){
-
+void JointMovement::generateTraj(
+    trajectory_msgs::msg::JointTrajectory &traj,
+    const std::vector<JointCommand>& commands,
+    bool use_same_time)
+{
     const int N_points = 10;
-    const double total_time = 10.0;
 
-    // Avoid appending to an existing trajectory.
+    if (commands.empty()) {
+        throw std::invalid_argument("No joint commands provided");
+    }
+
+    // Find the longest requested movement duration.
+    double total_time = 0.0;
+
+    for (const auto& cmd : commands) {
+        if (cmd.traj_time <= 0.0 || !std::isfinite(cmd.traj_time)) {
+            throw std::invalid_argument("Invalid trajectory duration");
+        }
+
+        total_time = std::max(total_time, cmd.traj_time);
+    }
+
+    // Clear the existing trajectory.
     traj.joint_names.clear();
     traj.points.clear();
 
-    // Register all joints in the trajectory.
+    // Register all joints.
     for (const auto& cmd : commands) {
         traj.joint_names.push_back(getJointName(cmd.id));
     }
 
-    // Generate synchronized trajectory points.
-    for (int i = 0; i < N_points; ++i) {
+    // Generate timestamps.
+    std::set<double> time_points;
 
+    // Regularly spaced points across the entire trajectory.
+    for (int i = 0; i < N_points; ++i) {
         double t = total_time * i / (N_points - 1);
-        double u = t / total_time;
+        time_points.insert(t);
+    }
+
+    // Add the exact finishing time of each joint.
+    for (const auto& cmd : commands) {
+        double duration = use_same_time ? total_time : cmd.traj_time;
+        time_points.insert(duration);
+    }
+
+    // Generate synchronized trajectory points.
+    for (double t : time_points) {
 
         trajectory_msgs::msg::JointTrajectoryPoint point;
 
-        // Calculate position, velocity and acceleration
-        // for every joint at the current time.
         for (const auto& cmd : commands) {
 
             double distance = cmd.final_position - cmd.start_position;
 
-            double u2 = u * u;
-            double u3 = u2 * u;
-            double u4 = u3 * u;
-            double u5 = u4 * u;
+            // Determine the duration for this particular joint.
+            double duration = use_same_time ? total_time : cmd.traj_time;
 
-            // Quintic position profile
-            double pos = cmd.start_position + distance *
-                (10.0 * u3 - 15.0 * u4 + 6.0 * u5);
+            double pos, vel, acs;
 
-            // Velocity
-            double vel = distance / total_time *
-                (30.0 * u2 - 60.0 * u3 + 30.0 * u4);
+            if (t >= duration) {
+                // This joint has already reached its target.
+                pos = cmd.final_position;
+                vel = 0.0;
+                acs = 0.0;
+            }
+            else {
+                // Normalized time for this joint.
+                double u = t / duration;
 
-            // Acceleration
-            double acs = distance / (total_time * total_time) *
-                (60.0 * u - 180.0 * u2 + 120.0 * u3);
+                double u2 = u * u;
+                double u3 = u2 * u;
+                double u4 = u3 * u;
+                double u5 = u4 * u;
+
+                // Quintic position profile.
+                pos = cmd.start_position + distance *
+                    (10.0 * u3 - 15.0 * u4 + 6.0 * u5);
+
+                // Velocity.
+                vel = distance / duration *
+                    (30.0 * u2 - 60.0 * u3 + 30.0 * u4);
+
+                // Acceleration.
+                acs = distance / (duration * duration) *
+                    (60.0 * u - 180.0 * u2 + 120.0 * u3);
+            }
 
             point.positions.push_back(pos);
             point.velocities.push_back(vel);
             point.accelerations.push_back(acs);
         }
 
-        // Assign timestamp to this trajectory point.
+        // Assign timestamp.
         point.time_from_start.sec =
-            static_cast<int32_t>(t);
+            static_cast<int32_t>(std::floor(t));
 
         point.time_from_start.nanosec =
             static_cast<uint32_t>((t - std::floor(t)) * 1e9);
 
         traj.points.push_back(point);
     }
-
-
 }
 
 
 
- void JointMovement::moveJoints(const std::vector<JointCommand>& commands){
+ void JointMovement::moveJoints(const std::vector<JointCommand>& commands, bool use_same_time){
     trajectory_msgs::msg::JointTrajectory traj;
 
 
-    generateTraj(traj, commands);
+    generateTraj(traj, commands, use_same_time);
 
     sendTrajectory(traj);
 }
@@ -448,7 +468,7 @@ void JointMovement::cancelMovement()
     }
 }
 
-void JointMovement::JointStateFeedback(MissionMsg::SharedPtr &feedbackMsg){
+void JointMovement::JointGoalStateFeedback(MissionMsg::SharedPtr &feedbackMsg){
     if(prev_goal_state == MissionMsg::GOAL_ACCEPTED){
         goal_state = MissionMsg::GOAL_EXECUTING;
     }
