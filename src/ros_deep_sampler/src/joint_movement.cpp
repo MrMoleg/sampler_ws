@@ -303,6 +303,98 @@ void JointMovement::evaluateProfile(
         p.direction * vel;
 }
 
+std::vector<double> JointMovement::linspace(double start_in, double end_in, int num_in)
+{
+
+  std::vector<double> linspaced;
+
+  double start = static_cast<double>(start_in);
+  double end = static_cast<double>(end_in);
+  double num = static_cast<double>(num_in);
+
+  if (num == 0) { return linspaced; }
+  if (num == 1) 
+    {
+      linspaced.push_back(start);
+      return linspaced;
+    }
+
+  double delta = (end - start) / (num - 1);
+
+  for(int i=0; i < num-1; ++i)
+    {
+      linspaced.push_back(start + delta * i);
+    }
+  linspaced.push_back(end); // I want to ensure that start and end
+                            // are exactly the same as the input
+  return linspaced;
+}
+
+
+void JointMovement::generateTraj1(trajectory_msgs::msg::JointTrajectory &traj,
+             const std::vector<JointCommand>& commands){
+
+    const int N_points = 10;
+    const double total_time = 10.0;
+
+    // Avoid appending to an existing trajectory.
+    traj.joint_names.clear();
+    traj.points.clear();
+
+    // Register all joints in the trajectory.
+    for (const auto& cmd : commands) {
+        traj.joint_names.push_back(getJointName(cmd.id));
+    }
+
+    // Generate synchronized trajectory points.
+    for (int i = 0; i < N_points; ++i) {
+
+        double t = total_time * i / (N_points - 1);
+        double u = t / total_time;
+
+        trajectory_msgs::msg::JointTrajectoryPoint point;
+
+        // Calculate position, velocity and acceleration
+        // for every joint at the current time.
+        for (const auto& cmd : commands) {
+
+            double distance = cmd.final_position - cmd.start_position;
+
+            double u2 = u * u;
+            double u3 = u2 * u;
+            double u4 = u3 * u;
+            double u5 = u4 * u;
+
+            // Quintic position profile
+            double pos = cmd.start_position + distance *
+                (10.0 * u3 - 15.0 * u4 + 6.0 * u5);
+
+            // Velocity
+            double vel = distance / total_time *
+                (30.0 * u2 - 60.0 * u3 + 30.0 * u4);
+
+            // Acceleration
+            double acs = distance / (total_time * total_time) *
+                (60.0 * u - 180.0 * u2 + 120.0 * u3);
+
+            point.positions.push_back(pos);
+            point.velocities.push_back(vel);
+            point.accelerations.push_back(acs);
+        }
+
+        // Assign timestamp to this trajectory point.
+        point.time_from_start.sec =
+            static_cast<int32_t>(t);
+
+        point.time_from_start.nanosec =
+            static_cast<uint32_t>((t - std::floor(t)) * 1e9);
+
+        traj.points.push_back(point);
+    }
+
+
+}
+
 void JointMovement::generateMultiJointsTrajectory(trajectory_msgs::msg::JointTrajectory &traj,
              const std::vector<JointCommand>& commands,
              double accel_time,
@@ -398,107 +490,109 @@ void JointMovement::generateMultiJointsTrajectory(trajectory_msgs::msg::JointTra
  void JointMovement::moveJoints(const std::vector<JointCommand>& commands){
     trajectory_msgs::msg::JointTrajectory traj;
 
-    generateMultiJointsTrajectory(
-        traj,
-        commands,
-        0.5,
-        0.02);
+    // generateMultiJointsTrajectory(
+    //     traj,
+    //     commands,
+    //     2.0,            //2 seconds acceleration
+    //     0.02);
+
+    generateTraj1(traj, commands);
 
     sendTrajectory(traj);
 }
 
-  void JointMovement::generateTrajectory(
-      trajectory_msgs::msg::JointTrajectory &traj,
-      const std::string &joint_name,
-      double start_pos,
-      double final_pos,
-      double max_velocity,
-      bool is_calibration,
-      double accel_time,
-      double dt)
-  {
+//   void JointMovement::generateTrajectory(
+//       trajectory_msgs::msg::JointTrajectory &traj,
+//       const std::string &joint_name,
+//       double start_pos,
+//       double final_pos,
+//       double max_velocity,
+//       bool is_calibration,
+//       double accel_time,
+//       double dt)
+//   {
      
     
 
-      traj.joint_names.push_back(joint_name);
+//       traj.joint_names.push_back(joint_name);
 
-      double distance = final_pos - start_pos;
-      double direction = (distance >= 0.0) ? 1.0 : -1.0;
-      distance = std::abs(distance);
+//       double distance = final_pos - start_pos;
+//       double direction = (distance >= 0.0) ? 1.0 : -1.0;
+//       distance = std::abs(distance);
 
-      // acceleration
-      double accel = max_velocity / accel_time;
+//       // acceleration
+//       double accel = max_velocity / accel_time;
 
-      // distance during acceleration
-      double accel_dist = 0.5 * accel * accel_time * accel_time;
+//       // distance during acceleration
+//       double accel_dist = 0.5 * accel * accel_time * accel_time;
 
-      double cruise_dist = distance - 2.0 * accel_dist;
-      double cruise_time = 0.0;
+//       double cruise_dist = distance - 2.0 * accel_dist;
+//       double cruise_time = 0.0;
 
-      // Triangle profile if motion is too short
-      if (cruise_dist < 0.0)
-      {
-          accel_time = std::sqrt(distance / accel);
-          accel_dist = distance / 2.0;
-          cruise_dist = 0.0;
-          cruise_time = 0.0;
-          max_velocity = accel * accel_time;
-      }
-      else
-      {
-          cruise_time = cruise_dist / max_velocity;
-      }
+//       // Triangle profile if motion is too short
+//       if (cruise_dist < 0.0)
+//       {
+//           accel_time = std::sqrt(distance / accel);
+//           accel_dist = distance / 2.0;
+//           cruise_dist = 0.0;
+//           cruise_time = 0.0;
+//           max_velocity = accel * accel_time;
+//       }
+//       else
+//       {
+//           cruise_time = cruise_dist / max_velocity;
+//       }
 
-      double total_time = 2.0 * accel_time + cruise_time;
+//       double total_time = 2.0 * accel_time + cruise_time;
 
-      for (double t = 0.0; t <= total_time + 1e-6; t += dt)
-      {
-          double pos;
-          double vel;
+//       for (double t = 0.0; t <= total_time + 1e-6; t += dt)
+//       {
+//           double pos;
+//           double vel;
 
-          if (t < accel_time)
-          {
-              // acceleration
-              vel = accel * t;
-              pos = 0.5 * accel * t * t;
-          }
-          else if (t < accel_time + cruise_time)
-          {
-              // cruise
-              double tc = t - accel_time;
-              vel = max_velocity;
-              pos = accel_dist + max_velocity * tc;
-          }
-          else
-          {
-              // deceleration
-              double td = t - accel_time - cruise_time;
-              vel = max_velocity - accel * td;
+//           if (t < accel_time)
+//           {
+//               // acceleration
+//               vel = accel * t;
+//               pos = 0.5 * accel * t * t;
+//           }
+//           else if (t < accel_time + cruise_time)
+//           {
+//               // cruise
+//               double tc = t - accel_time;
+//               vel = max_velocity;
+//               pos = accel_dist + max_velocity * tc;
+//           }
+//           else
+//           {
+//               // deceleration
+//               double td = t - accel_time - cruise_time;
+//               vel = max_velocity - accel * td;
 
-              pos = accel_dist +
-                    cruise_dist +
-                    max_velocity * td -
-                    0.5 * accel * td * td;
-          }
+//               pos = accel_dist +
+//                     cruise_dist +
+//                     max_velocity * td -
+//                     0.5 * accel * td * td;
+//           }
 
-          trajectory_msgs::msg::JointTrajectoryPoint point;
+//           trajectory_msgs::msg::JointTrajectoryPoint point;
 
-          point.positions.push_back(
-              start_pos + direction * pos);
+//           point.positions.push_back(
+//               start_pos + direction * pos);
 
-          point.velocities.push_back(
-              direction * vel);
+//           point.velocities.push_back(
+//               direction * vel);
 
-          point.time_from_start =
-              rclcpp::Duration::from_seconds(t);
+//           point.time_from_start =
+//               rclcpp::Duration::from_seconds(t);
 
-          traj.points.push_back(point);
-      }
+//           traj.points.push_back(point);
+//       }
 
-      // Ensure exact endpoint
-      traj.points.back().positions[0] = final_pos;
-      traj.points.back().velocities[0] = 0.0;
-  }
+//       // Ensure exact endpoint
+//       traj.points.back().positions[0] = final_pos;
+//       traj.points.back().velocities[0] = 0.0;
+//   }
 
 void JointMovement::calibratePlatform(double vel){
     float final_pos;

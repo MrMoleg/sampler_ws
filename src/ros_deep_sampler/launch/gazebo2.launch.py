@@ -202,8 +202,6 @@ def generate_launch_description():
         gazebo,
 
         robot_state_publisher,
-        rviz_config_arg,
-
         clock_bridge,
 
         load_joint_state_broadcaster,

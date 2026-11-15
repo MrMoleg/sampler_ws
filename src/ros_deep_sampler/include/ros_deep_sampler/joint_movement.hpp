@@ -1,6 +1,6 @@
 #include <memory>
 #include "rclcpp/rclcpp.hpp"
-
+#include<cmath>
 #include <std_msgs/msg/float64_multi_array.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <trajectory_msgs/msg/joint_trajectory.hpp>
@@ -85,6 +85,7 @@ class  JointMovement{
         void moveContainer(double pos, double vel, bool calibrated);
         void calibrateContainer(double vel);
         void calibrateJoints(double vel);
+        std::vector<double> linspace(double start_in, double end_in, int num_in);
 
         void moveJoint(const std::vector<JointCommand>& commands);
         std::string getJointName(JointsIds id);
@@ -92,6 +93,9 @@ class  JointMovement{
         void send_rotor_velocity(JointsIds id, double vel);
         void stopMotors();
 
+
+        void generateTraj1(trajectory_msgs::msg::JointTrajectory &traj,
+             const std::vector<JointCommand>& commands);
         void sendTrajectory(trajectory_msgs::msg::JointTrajectory &traj);
         void generateTrajectory(
             trajectory_msgs::msg::JointTrajectory &traj,
