@@ -184,33 +184,25 @@ SamplerHardware::export_command_interfaces()
         hardware_interface::HW_IF_POSITION,
         &platform_cmd_);
 
-    // command_interfaces.emplace_back(
-    //     "platform_vel_joint",
-    //     hardware_interface::HW_IF_VELOCITY,
-    //     &platform_vel_cmd_);
-    // command_interfaces.emplace_back(
-    //     "drill_vel_joint",
-    //     hardware_interface::HW_IF_VELOCITY,
-    //     &drill_vel_cmd_);
-    //  command_interfaces.emplace_back(
-    //     "container_vel_joint",
-    //     hardware_interface::HW_IF_VELOCITY,
-    //     &container_vel_cmd_);
-    
     command_interfaces.emplace_back(
         "platform_joint",
         hardware_interface::HW_IF_VELOCITY,
         &platform_vel_cmd_);
+    command_interfaces.emplace_back(
+        "drill_joint",
+        hardware_interface::HW_IF_VELOCITY,
+        &drill_vel_cmd_);
+     command_interfaces.emplace_back(
+        "container_joint",
+        hardware_interface::HW_IF_VELOCITY,
+        &container_vel_cmd_);
+    
 
     command_interfaces.emplace_back(
         "drill_joint",
         hardware_interface::HW_IF_POSITION,
         &drill_cmd_);
 
-    command_interfaces.emplace_back(
-        "drill_joint",
-        hardware_interface::HW_IF_VELOCITY,
-        &drill_vel_cmd_);
 
 
     command_interfaces.emplace_back(

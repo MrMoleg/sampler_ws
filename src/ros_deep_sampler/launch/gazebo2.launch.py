@@ -151,6 +151,10 @@ def generate_launch_description():
         'brush_rotor_velocity_controller',
     ]
 
+    # vel_controller= [ 'velocity_command_controller',]
+
+
+
     controller_spawners = [
         Node(
             package='controller_manager',
@@ -166,6 +170,20 @@ def generate_launch_description():
         )
         for controller in controllers
     ]
+
+    velocity_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=[
+            'velocity_command_controller',
+            '--controller-manager',
+            '/controller_manager',
+            '--controller-manager-timeout',
+            '60',
+            '--inactive',
+        ],
+        output='screen'
+    )
 
     # ---------------------------------------------------------
     # Launch sequence
@@ -207,6 +225,7 @@ def generate_launch_description():
         load_joint_state_broadcaster,
 
         load_controllers,
+        velocity_controller_spawner,
 
         delayed_spawn,
 
