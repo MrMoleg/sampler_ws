@@ -35,6 +35,7 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(trajectory_msgs REQUIRED)
 find_package(backward_ros REQUIRED)
 find_package(control_msgs REQUIRED)
+find_package(controller_manager_msgs REQUIRED)
 
 
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
@@ -102,6 +103,7 @@ ament_target_dependencies(ros_deep_sampler_node
   sensor_msgs
   trajectory_msgs
   control_msgs
+  controller_manager_msgs
   
 )
 

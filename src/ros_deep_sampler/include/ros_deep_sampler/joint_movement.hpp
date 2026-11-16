@@ -3,6 +3,7 @@
 #include<cmath>
 #include <std_msgs/msg/float64_multi_array.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
+#include "controller_manager_msgs/srv/switch_controller.hpp"
 #include <trajectory_msgs/msg/joint_trajectory.hpp>
 #include <trajectory_msgs/msg/joint_trajectory_point.hpp>
 #include <unordered_map>
@@ -89,6 +90,9 @@ class  JointMovement{
         bool isGoalCanceled();
         void setGoalStatus(bool status);
         void stop_movement();
+
+        void switchToVelocityController();
+        void switchToPositionController();
       
        
         
@@ -117,8 +121,9 @@ class  JointMovement{
 
         rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_sub_;
         rclcpp::Subscription<SamplerCanFeedback>::SharedPtr sampler_can_feedback_sub_;
+        rclcpp::Client<controller_manager_msgs::srv::SwitchController>::SharedPtr controller_switch_client;
+   
         
-        rclcpp_action::Client<FollowJointTrajectory>::SharedPtr active_client_;
         TJCGoalHandle::SharedPtr active_tjc_goal_;
         std::shared_future<TJCGoalHandle::WrappedResult> result_future_;
 

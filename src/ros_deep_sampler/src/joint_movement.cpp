@@ -10,6 +10,10 @@ JointMovement::JointMovement(rclcpp::Node *node)
     rclcpp_action::create_client<FollowJointTrajectory>(
         node_,
         "/position_controller/follow_joint_trajectory");
+    
+    controller_switch_client = node_->create_client<controller_manager_msgs::srv::SwitchController>(
+        "/controller_manager/switch_controller");
+    
    
     joints_vel_pub_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>(
             "/velocity_command_controller/commands", 10);
@@ -107,6 +111,111 @@ bool JointMovement::get_end_switch_state(JointsIds id){
 
 double JointMovement::get_distance_to_ground(){
     return distance_to_ground;
+}
+
+void JointMovement::switchToVelocityController()
+{
+    using SwitchController =
+        controller_manager_msgs::srv::SwitchController;
+
+    // Wait for the service.
+    if (!controller_switch_client->wait_for_service(
+            std::chrono::seconds(5)))
+    {
+        RCLCPP_ERROR(
+            node_->get_logger(),
+            "Controller manager service unavailable!");
+        return;
+    }
+
+    auto request = std::make_shared<SwitchController::Request>();
+
+    request->activate_controllers = {
+        "velocity_command_controller"
+    };
+
+    request->deactivate_controllers = {
+        "position_controller"
+    };
+
+    request->strictness = SwitchController::Request::STRICT;
+    request->activate_asap = true;
+
+    request->timeout.sec = 2;
+    request->timeout.nanosec = 0;
+
+    // Send request.
+    controller_switch_client->async_send_request(
+        request,
+        [this](rclcpp::Client<SwitchController>::SharedFuture future)
+        {
+            auto response = future.get();
+
+            if (response->ok)
+            {
+                RCLCPP_INFO(
+                    node_->get_logger(),
+                    "Controller switch successful");
+            }
+            else
+            {
+                RCLCPP_ERROR(
+                    node_->get_logger(),
+                    "Controller switch failed: %s",
+                    response->message.c_str());
+            }
+        });
+
+    RCLCPP_INFO(
+        node_->get_logger(),
+        "Requested switch to velocity controller");
+}
+
+void JointMovement::switchToPositionController()
+{
+    using SwitchController =
+        controller_manager_msgs::srv::SwitchController;
+
+    auto request = std::make_shared<SwitchController::Request>();
+
+    request->activate_controllers = {
+        "position_controller"
+    };
+
+    request->deactivate_controllers = {
+        "velocity_command_controller"
+    };
+
+    request->strictness = SwitchController::Request::STRICT;
+    request->activate_asap = true;
+
+    request->timeout.sec = 2;
+    request->timeout.nanosec = 0;
+
+    controller_switch_client->async_send_request(
+        request,
+        [this](rclcpp::Client<SwitchController>::SharedFuture future)
+        {
+            auto response = future.get();
+
+            if (response->ok)
+            {
+                RCLCPP_INFO(
+                    node_->get_logger(),
+                    "Controller switch successful");
+            }
+            else
+            {
+                RCLCPP_ERROR(
+                    node_->get_logger(),
+                    "Controller switch failed: %s",
+                    response->message.c_str());
+            }
+        });
+
+    RCLCPP_INFO(
+        node_->get_logger(),
+        "Requested switch to position controller");
 }
 
 void JointMovement::send_rotor_velocity(JointsIds rotor_id, double vel){

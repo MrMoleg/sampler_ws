@@ -66,6 +66,7 @@
   <depend>trajectory_msgs</depend>
 
   <depend>control_msgs</depend>
+  <depend>controller_manager_msgs</depend>
 
  
 
