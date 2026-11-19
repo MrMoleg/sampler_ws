@@ -19,7 +19,7 @@ namespace ros_deep_sampler{
     std::bind(&MissionControl::HandleRoverStatus, this, std::placeholders::_1)); 
     
     ////Change in the future
-    PubFeedback_ = this->create_publisher<MissionMsg>("/MQTT/SamplerFeedback", 100);
+    PubFeedback_ = this->create_publisher<MissionMsg>("/MQTT/SamplerStatus", 100);
     appFeedbackTimer_ = this->create_wall_timer(
      std::chrono::milliseconds(500), std::bind(&MissionControl::publishAppFeedback, this));
 
@@ -50,6 +50,7 @@ namespace ros_deep_sampler{
 
     getFeedback(missionFeedbackMsg, *joints_);
     // Highest priority: invalid control mode
+    
     if (ctrlType_ == ControlType::NO_SAMPLER)
     {
         stopExecuting();
@@ -126,6 +127,7 @@ namespace ros_deep_sampler{
 }
 
 void MissionControl::setControlType(const RoverStatusMsg::ConstSharedPtr &msg){
+     RCLCPP_INFO(this->get_logger(), "inside RoverStatus callback");
     if (msg->communication_state == RoverStatusMsg::COMMUNICATION_STATE_OPENED &&
 		   msg->control_mode == (CONTROL_MODE_DEEP_SAMPLER_AUTONOMY | CONTROL_MODE_SURFACE_SAMPLER_AUTONOMY)){
         ctrlType_ = ControlType::AUTONOMY; 
@@ -391,6 +393,7 @@ double MissionControl::getPlatformPosition(){
 //     return false;
 //}
 void MissionControl::getFeedback(MissionMsg::SharedPtr &missionFeedback, JointMovement& joints_){
+  RCLCPP_INFO(this->get_logger(), "Inside feedback check in mission update");
   missionFeedback->control_type = ctrl_to_Feedback();
   missionFeedback->autonomy_state = to_Feedback();
   missionFeedback->platform_pos = joints_.get_current_position(JointMovement::JointsIds::PLATFORM);
@@ -400,6 +403,7 @@ void MissionControl::getFeedback(MissionMsg::SharedPtr &missionFeedback, JointMo
   missionFeedback->vacuum_suction_vel = joints_.get_current_velocity(JointMovement::JointsIds::VACUUM_ROTOR);
   missionFeedback->container_pos = joints_.get_current_velocity(JointMovement::JointsIds::CONTAINER);
   joints_.JointGoalStateFeedback(missionFeedback);
+  RCLCPP_INFO(this->get_logger(), "After feedback check in mission update");
 }
 
 

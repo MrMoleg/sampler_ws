@@ -22,11 +22,13 @@ struct RosCanConstants
 		static const std::string can_manipulator_ctl;	/**< Topic used for manipulator 'manipulation' */
 		static const std::string can_sampler_status;	/**< Topic with sampler status */
 		static const std::string can_battery_info;		/**< Topic with battery (BMS & HOTSWAP) status */
+		static const std::string can_calibration_motor_command;
 		static const std::string mqtt_rover_status;		/**< Topic for rover status from MQTT. */
 		static const std::string mqtt_sampler_control;	/**< Topic for sampler control from MQTT. */
-
-		static const std::string can_sampler_feedback;
+		static const std::string mqtt_sampler_feedback;
+		static const std::string can_sampler_state;
 		static const std::string can_sampler_cmd;
+		static const std::string mqtt_calibrate_axis;			/**< Topic used to calibrate motors (wheels, manipulator) */
 	};
 
 	struct VescIds
@@ -56,14 +58,13 @@ struct RosCanConstants
 
 		// 0x80 - 0x8f - range for the sampler
 		static const uint8_t sampler_platform;		 /**< ID for the sampler platform movement */
-		static const uint8_t sampler_drill_mov;		 /**< ID for the sampler drill movement */
-		static const uint8_t sampler_drill;			 /**< ID for the sampler drill action */
-		static const uint8_t sampler_container_a;	 /**< ID for the sampler container A (position only) */
-		static const uint8_t sampler_container_b;	 /**< ID for the sampler container B (position only) */
-		static const uint8_t sampler_vacuum_suction; /**< ID for the sampler vacuum main motor -1:1 duty range */
-		static const uint8_t sampler_vacuum_a;		 /**< ID for the sampler vacuum motor A ON-OFF only (duty 0-1) */
-		static const uint8_t sampler_vacuum_b;		 /**< ID for the sampler vacuum motor B ON-OFF only (duty 0-1) */
-
+		static const uint8_t sampler_drill;               /**< ID for the sampler drill movement */
+		static const uint8_t sampler_drill_rotor;         /**< ID for the sampler drill action */
+		static const uint8_t sampler_container;           /**< ID for the sampler container*/
+		static const uint8_t sampler_container_b;         /**< ID for the sampler container B feedback */
+		static const uint8_t sampler_vacuum;              /* < ID for the sampler vacuum motor for suction */
+		static const uint8_t sampler_vacuum_brush;       /**< ID for the sampler vacuum brush motor */
+		static const uint8_t sampler_clamp;               /**< ID for the sampler vacuum clamp */
 		// 0x90 - 0x9f - range for the bms
 		static const uint8_t bms_battery_left;	 /**< ID for the left battery BMS. */
 		static const uint8_t bms_battery_center; /**< ID for the center battery BMS. */

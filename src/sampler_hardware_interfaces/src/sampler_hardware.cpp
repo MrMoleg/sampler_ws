@@ -79,7 +79,7 @@ CallbackReturn SamplerHardware::on_configure(
     if (get_node())
     {   
         sampler_can_feedback_sub_ = get_node()->create_subscription<SamplerCanFeedback>(
-            RosCanConstants::RosTopics::can_sampler_feedback, 10,
+            RosCanConstants::RosTopics::can_sampler_state, 10,
             std::bind(&SamplerHardware::feedbackCallback, this, std::placeholders::_1));
 
         sampler_can_cmd_pub_ = get_node()->create_publisher<SamplerCanCmd>(
@@ -132,12 +132,12 @@ CallbackReturn SamplerHardware::on_configure(
                     std::bind(&SamplerHardware::HandleMissionCmd, this, std::placeholders::_1));
         
         cmd_.actuator_id[0] = RosCanConstants::VescIds::sampler_platform;
-        cmd_.actuator_id[1] = RosCanConstants::VescIds::sampler_drill_mov;
-        cmd_.actuator_id[2] = RosCanConstants::VescIds::sampler_container_a;
-        cmd_.actuator_id[3] = RosCanConstants::VescIds::sampler_drill;
-        cmd_.actuator_id[4] = RosCanConstants::VescIds::sampler_vacuum_suction;
-        cmd_.actuator_id[5] = RosCanConstants::VescIds::sampler_vacuum_a; // Brush 
-        cmd_.actuator_id[6] = RosCanConstants::VescIds::sampler_vacuum_b; // clamp?
+        cmd_.actuator_id[1] = RosCanConstants::VescIds::sampler_drill;
+        cmd_.actuator_id[2] = RosCanConstants::VescIds::sampler_container;
+        cmd_.actuator_id[3] = RosCanConstants::VescIds::sampler_drill_rotor;
+        cmd_.actuator_id[4] = RosCanConstants::VescIds::sampler_vacuum;
+        cmd_.actuator_id[5] = RosCanConstants::VescIds::sampler_vacuum_brush; // Brush 
+        cmd_.actuator_id[6] = RosCanConstants::VescIds::sampler_clamp; // clamp?
 
     }
 
@@ -318,34 +318,38 @@ hardware_interface::return_type SamplerHardware::read(const rclcpp::Time& /*time
   if(real_positions_.find(RosCanConstants::VescIds::sampler_platform) != real_positions_.end()){
     platform_pos_ = real_positions_[RosCanConstants::VescIds::sampler_platform];
   }
-  if(real_positions_.find(RosCanConstants::VescIds::sampler_drill_mov) != real_positions_.end()){
-    drill_pos_ = real_positions_[RosCanConstants::VescIds::sampler_drill_mov];
+  if(real_positions_.find(RosCanConstants::VescIds::sampler_drill) != real_positions_.end()){
+    drill_pos_ = real_positions_[RosCanConstants::VescIds::sampler_drill];
   }
-  if(real_positions_.find(RosCanConstants::VescIds::sampler_container_a) != real_positions_.end()){
-    container_pos_ = real_positions_[RosCanConstants::VescIds::sampler_container_a];
+  if(real_positions_.find(RosCanConstants::VescIds::sampler_container) != real_positions_.end()){
+    container_pos_ = real_positions_[RosCanConstants::VescIds::sampler_container];
   }
   if (real_vel_.find(RosCanConstants::VescIds::sampler_platform) != real_vel_.end())
   {
     platform_vel_ = real_vel_[RosCanConstants::VescIds::sampler_platform];
   }
-  if(real_vel_.find(RosCanConstants::VescIds::sampler_drill_mov) != real_vel_.end()){
-    drill_vel_ = real_vel_[RosCanConstants::VescIds::sampler_drill_mov];
+  if(real_vel_.find(RosCanConstants::VescIds::sampler_drill) != real_vel_.end()){
+    drill_vel_ = real_vel_[RosCanConstants::VescIds::sampler_drill];
   }
-   if (real_vel_.find(RosCanConstants::VescIds::sampler_container_a) != real_vel_.end())
+   if (real_vel_.find(RosCanConstants::VescIds::sampler_container) != real_vel_.end())
   {
-    container_vel_ = real_vel_[RosCanConstants::VescIds::sampler_container_a];
+    container_vel_ = real_vel_[RosCanConstants::VescIds::sampler_container];
   }
-  if (real_vel_.find(RosCanConstants::VescIds::sampler_drill) != real_vel_.end())
+  if (real_vel_.find(RosCanConstants::VescIds::sampler_drill_rotor) != real_vel_.end())
   {
-    rotor_vel_ = real_vel_[RosCanConstants::VescIds::sampler_drill];
+    rotor_vel_ = real_vel_[RosCanConstants::VescIds::sampler_drill_rotor];
   }
-  if (real_vel_.find(RosCanConstants::VescIds::sampler_vacuum_suction) != real_vel_.end())
+  if (real_vel_.find(RosCanConstants::VescIds::sampler_vacuum) != real_vel_.end())
   {
-    vacuum_rotor_vel_ = real_vel_[RosCanConstants::VescIds::sampler_vacuum_suction];
+    vacuum_rotor_vel_ = real_vel_[RosCanConstants::VescIds::sampler_vacuum];
   }
-  if (real_vel_.find(RosCanConstants::VescIds::sampler_vacuum_a) != real_vel_.end())
+  if (real_vel_.find(RosCanConstants::VescIds::sampler_vacuum_brush) != real_vel_.end())
   {
-    brush_rotor_vel_ = real_vel_[RosCanConstants::VescIds::sampler_vacuum_a];
+    brush_rotor_vel_ = real_vel_[RosCanConstants::VescIds::sampler_vacuum_brush];
+  }
+  if (real_positions_.find(RosCanConstants::VescIds::sampler_clamp) != real_positions_.end())
+  {
+    clamp_pos_ = real_positions_[RosCanConstants::VescIds::sampler_clamp];
   }
   //////////////////////
 //   if (sim_positions_.find("platform_joint") != sim_positions_.end())
@@ -470,9 +474,6 @@ hardware_interface::return_type SamplerHardware::write(const rclcpp::Time& /*tim
 
     }
     
-  
-
-
     cmd_.set_value[3] = rotor_cmd_;
     cmd_.set_value[4] = vacuum_rotor_cmd_;
     cmd_.set_value[5] = brush_rotor_cmd_;
@@ -480,27 +481,27 @@ hardware_interface::return_type SamplerHardware::write(const rclcpp::Time& /*tim
     
     sampler_can_cmd_pub_->publish(cmd_);
 ///////////////
-    std_msgs::msg::Float64 msg;
-    msg.data = platform_cmd_;
-    platform_cmd_pub_->publish(msg);
+    // std_msgs::msg::Float64 msg;
+    // msg.data = platform_cmd_;
+    // platform_cmd_pub_->publish(msg);
 
-    msg.data = drill_cmd_;
-    drill_cmd_pub_->publish(msg);
+    // msg.data = drill_cmd_;
+    // drill_cmd_pub_->publish(msg);
 
-    msg.data = container_cmd_;
-    container_cmd_pub_->publish(msg);
+    // msg.data = container_cmd_;
+    // container_cmd_pub_->publish(msg);
 
-    msg.data = rotor_cmd_;
-    rotor_cmd_pub_->publish(msg);
+    // msg.data = rotor_cmd_;
+    // rotor_cmd_pub_->publish(msg);
 
-    msg.data = vacuum_rotor_cmd_;
-    vacuum_rotor_cmd_pub_->publish(msg);
+    // msg.data = vacuum_rotor_cmd_;
+    // vacuum_rotor_cmd_pub_->publish(msg);
 
-    msg.data = brush_rotor_cmd_;
-    brush_rotor_cmd_pub_->publish(msg);
+    // msg.data = brush_rotor_cmd_;
+    // brush_rotor_cmd_pub_->publish(msg);
 
-    msg.data = clamp_cmd_;
-    clamp_cmd_pub_->publish(msg);
+    // msg.data = clamp_cmd_;
+    // clamp_cmd_pub_->publish(msg);
 
     }
    
