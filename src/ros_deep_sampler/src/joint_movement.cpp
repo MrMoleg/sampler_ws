@@ -43,12 +43,12 @@ JointMovement::JointMovement(rclcpp::Node *node)
 
 
     can_id_to_joint_id[RosCanConstants::VescIds::sampler_platform] = JointsIds::PLATFORM;
-    can_id_to_joint_id[RosCanConstants::VescIds::sampler_drill_mov] = JointsIds::DRILL;
-    can_id_to_joint_id[RosCanConstants::VescIds::sampler_container_a] = JointsIds::CONTAINER;
-    can_id_to_joint_id[RosCanConstants::VescIds::sampler_drill] = JointsIds::DRILL_ROTOR;
-    can_id_to_joint_id[RosCanConstants::VescIds::sampler_vacuum_suction] = JointsIds::VACUUM_ROTOR;
-    can_id_to_joint_id[RosCanConstants::VescIds::sampler_vacuum_a] = JointsIds::BRUSH_ROTOR;
-    can_id_to_joint_id[RosCanConstants::VescIds::sampler_vacuum_b] = JointsIds::CLAMP_JOINT;
+    can_id_to_joint_id[RosCanConstants::VescIds::sampler_drill] = JointsIds::DRILL;
+    can_id_to_joint_id[RosCanConstants::VescIds::sampler_container] = JointsIds::CONTAINER;
+    can_id_to_joint_id[RosCanConstants::VescIds::sampler_drill_rotor] = JointsIds::DRILL_ROTOR;
+    can_id_to_joint_id[RosCanConstants::VescIds::sampler_vacuum] = JointsIds::VACUUM_ROTOR;
+    can_id_to_joint_id[RosCanConstants::VescIds::sampler_vacuum_brush] = JointsIds::BRUSH_ROTOR;
+    can_id_to_joint_id[RosCanConstants::VescIds::sampler_clamp] = JointsIds::CLAMP_JOINT;
     
     // To DO: Rename sampler actuators
 

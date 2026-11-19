@@ -8,7 +8,7 @@ namespace ros_deep_sampler{
   : Node("Mission_control_node", options)
   {
 
-    missionTimer_ = this->create_timer(std::chrono::milliseconds(50), std::bind(&MissionControl::MissionUpdate, this));
+    missionTimer_ = this->create_wall_timer(std::chrono::milliseconds(50), std::bind(&MissionControl::MissionUpdate, this));
  
     joints_ = std::make_unique<JointMovement>(this);
     
@@ -393,7 +393,7 @@ double MissionControl::getPlatformPosition(){
 //     return false;
 //}
 void MissionControl::getFeedback(MissionMsg::SharedPtr &missionFeedback, JointMovement& joints_){
-  RCLCPP_INFO(this->get_logger(), "Inside feedback check in mission update");
+ 
   missionFeedback->control_type = ctrl_to_Feedback();
   missionFeedback->autonomy_state = to_Feedback();
   missionFeedback->platform_pos = joints_.get_current_position(JointMovement::JointsIds::PLATFORM);
@@ -403,7 +403,7 @@ void MissionControl::getFeedback(MissionMsg::SharedPtr &missionFeedback, JointMo
   missionFeedback->vacuum_suction_vel = joints_.get_current_velocity(JointMovement::JointsIds::VACUUM_ROTOR);
   missionFeedback->container_pos = joints_.get_current_velocity(JointMovement::JointsIds::CONTAINER);
   joints_.JointGoalStateFeedback(missionFeedback);
-  RCLCPP_INFO(this->get_logger(), "After feedback check in mission update");
+  
 }
 
 
