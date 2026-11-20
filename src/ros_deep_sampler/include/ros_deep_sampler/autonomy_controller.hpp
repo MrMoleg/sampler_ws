@@ -99,7 +99,7 @@ public:
 
     void restart();
 
-    void requestCalibration(JointMovement& joints_,
+    void requestCalibration(SamplerState& sampler, JointMovement& joints_,
                         const rclcpp::Logger& logger);
 
     // void getFeedback(MissionMsg& missionFeedback,
@@ -161,7 +161,7 @@ private:
     static constexpr int VACUUM_SUCTION_TIME = 200;               // seconds
     static constexpr int WAIT_TIME_BEETWEN_STATES = 20; 
     static constexpr int POUR_TIME = 100;
-    static constexpr double JOINT_CALIBRATION_SPEED = 0.02;
+    
     static constexpr double HOME_POS = 0.01;
     static constexpr double PRECISION_THRESHOLD = 0.01;
     static constexpr double MAX_UNDEGROUND_POS = -0.35;
@@ -179,9 +179,15 @@ private:
     int rotation_time = 0;
     int time_between_states = 100;
 
+    
+    double PLATFORM_JOINT_CALIBRATION_SPEED = 0.02;
+    double DRILL_JOINT_CALIBRATION_SPEED = 0.02;
+    double CONTAINER_JOINT_CALIBRATION_SPEED = 0.02;
+    bool calibrated_drill = false;
+    bool calibrated_platform = false;
+    bool calibrated_container = false;
 
-    bool calibrate_drill = false;
-    bool calibrate_platform = false;
+    bool joints_calibrated = false;
 
 
     std::vector<JointMovement::JointCommand> commands;

@@ -19,8 +19,11 @@ void AutonomyController::executeAutonomy(SamplerState& sampler, const MissionCmd
       case AutonomyStates::IDLE:
 
          
-        if(!calibrate_platform){
+        if(!joints_calibrated){
           state_ = AutonomyStates::CALIBRATE_JOINTS;
+        }
+        else{
+          state_ = AutonomyStates::MOVE_PLATFORM_DOWN;
         }
 
             
@@ -30,14 +33,7 @@ void AutonomyController::executeAutonomy(SamplerState& sampler, const MissionCmd
 
       case AutonomyStates::CALIBRATE_JOINTS:
        
-        if(!goal_sent){
-          RCLCPP_INFO(logger, "Starting JOINTS CALIBRATION");
-          joints_.stopMotors();
-          joints_.calibrateJoints(JOINT_CALIBRATION_SPEED);
-          goal_sent = true;
-        }
-        
-        if(std::fabs(HOME_POS - joints_.get_current_position(JointMovement::JointsIds::PLATFORM)) < PRECISION_THRESHOLD){
+        requestCalibration(sampler, joints_, logger);
           // if(std::fabs(0.0 - joints_.get_current_position(JointMovement::JointsIds::PLATFORM)) < 0.01 &&             !!!!!!!!!!!!!!!!!
           //     std::fabs(0.0 - joints_.get_current_position(JointMovement::JointsIds::DRILL)) < 0.01 &&               !!!!!!!!!!!!!!!!!!
           //     std::fabs(0.0 - joints_.get_current_position(JointMovement::JointsIds::CONTAINER)) < 0.01){ do other}  !!!!!!!!!!!!!!!!!!!
@@ -45,18 +41,18 @@ void AutonomyController::executeAutonomy(SamplerState& sampler, const MissionCmd
           //if(joints_.get_end_switch_state(JointMovement::JointsIds::PLATFORM && 
           //   joints_.get_end_switch_state(JointMovement::JointsIds::DRILL &&
           //   joints_.get_end_switch_state(JointMovement::JointsIds::CONTAINER){}        
-          RCLCPP_INFO(logger, "Finishing moving up");
-          goal_sent = false;
-          calibrate_platform = true;
-          joints_.cancelMovement();
+        //   RCLCPP_INFO(logger, "Finishing moving up");
+        //   goal_sent = false;
+        //   calibrate_platform = true;
+        //   joints_.cancelMovement();
        
-          joints_.setTrajectoryStatus(false);
-          time_between_states = 0;
-          sampler.distance_to_ground = joints_.get_distance_to_ground();
-          state_ = AutonomyStates::MOVE_PLATFORM_DOWN; 
-          //}
+        //   joints_.setTrajectoryStatus(false);
+        //   time_between_states = 0;
+        //   sampler.distance_to_ground = joints_.get_distance_to_ground();
+        //   state_ = AutonomyStates::MOVE_PLATFORM_DOWN; 
+        //   //}
          
-        }
+        // }
         
       break;
 

@@ -59,6 +59,7 @@ class  JointMovement{
         std::string getJointName(JointsIds id);
 
         void send_rotor_velocity(JointsIds id, double vel);
+        void send_calibration_velocities(double platform_vel, double drill_vel, double cont_vel);
         void stopMotors();
 
 
@@ -93,6 +94,10 @@ class  JointMovement{
 
         void switchToVelocityController();
         void switchToPositionController();
+
+        bool get_position_controller_status();
+        bool get_velocity_controller_status();
+        bool get_controller_switching_tatus();
       
        
         
@@ -150,6 +155,12 @@ class  JointMovement{
         const double CLAMP_OPEN  = 1.57;
         const double CLAMP_CLOSED = 0.0;
 
+
+        bool active_velocity_controller = false;
+        bool active_position_controller = true;
+
+        bool controller_switching_end = true;
+ 
 
         
 };

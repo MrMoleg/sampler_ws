@@ -15,35 +15,66 @@ void AutonomyController::setState(AutonomyStates state){
 }
 
 bool AutonomyController::getCalibrationState(){
-    return calibrate_platform;
+    return joints_calibrated;
 }
 
-void AutonomyController::requestCalibration(JointMovement& joints_,
-                                            const rclcpp::Logger& logger){
-    if(!goal_sent){
+void AutonomyController::requestCalibration(SamplerState& sampler, JointMovement& joints_,
+                        const rclcpp::Logger& logger){
+   if(!goal_sent){
         RCLCPP_INFO(logger, "Starting JOINTS CALIBRATION");
-        joints_.calibrateJoints(0.02);
+        joints_.stopMotors();
+        joints_.calibrateJoints(PLATFORM_JOINT_CALIBRATION_SPEED);
         goal_sent = true;
     }
-    
-    if(std::fabs(0.0 - joints_.get_current_position(JointMovement::JointsIds::PLATFORM)) < 0.01){
-        // if(std::fabs(0.0 - joints_.get_current_position(JointMovement::JointsIds::PLATFORM)) < 0.01 &&             !!!!!!!!!!!!!!!!!
-        //     std::fabs(0.0 - joints_.get_current_position(JointMovement::JointsIds::DRILL)) < 0.01 &&               !!!!!!!!!!!!!!!!!!
-        //     std::fabs(0.0 - joints_.get_current_position(JointMovement::JointsIds::CONTAINER)) < 0.01){ do other}  !!!!!!!!!!!!!!!!!!!
-        
-        RCLCPP_INFO(logger, "Finishing moving up");
-        goal_sent = false;
-        calibrate_platform = true;
-        joints_.cancelMovement();
-    
-        joints_.setTrajectoryStatus(false);
-        return;
-        //state_ = AutonomyStates::MOVE_PLATFORM_DOWN; 
-        //}   
-    }
-    calibrate_platform = false;
-    return;
 
+    if(joints_.get_velocity_controller_status()){
+        joints_.send_calibration_velocities(PLATFORM_JOINT_CALIBRATION_SPEED, DRILL_JOINT_CALIBRATION_SPEED, 
+            CONTAINER_JOINT_CALIBRATION_SPEED);
+    }
+    
+    if(std::fabs(HOME_POS - joints_.get_current_position(JointMovement::JointsIds::PLATFORM)) < PRECISION_THRESHOLD 
+                    && !calibrated_platform){
+        PLATFORM_JOINT_CALIBRATION_SPEED = 0.0;
+        joints_.send_calibration_velocities(PLATFORM_JOINT_CALIBRATION_SPEED, DRILL_JOINT_CALIBRATION_SPEED, 
+                                            CONTAINER_JOINT_CALIBRATION_SPEED);
+        calibrated_platform = true;
+        RCLCPP_INFO(logger, "Finishing calibration of PLATFORM joint");
+    }
+    if(std::fabs(HOME_POS - joints_.get_current_position(JointMovement::JointsIds::DRILL)) < PRECISION_THRESHOLD
+                && !calibrated_drill){
+        DRILL_JOINT_CALIBRATION_SPEED = 0.0;
+        joints_.send_calibration_velocities(PLATFORM_JOINT_CALIBRATION_SPEED, DRILL_JOINT_CALIBRATION_SPEED, 
+                                            CONTAINER_JOINT_CALIBRATION_SPEED);
+        calibrated_drill = true;
+        RCLCPP_INFO(logger, "Finishing calibration of DRILL joint");
+    }
+    if(std::fabs(HOME_POS - joints_.get_current_position(JointMovement::JointsIds::CONTAINER)) < PRECISION_THRESHOLD
+                && !calibrated_container){
+        CONTAINER_JOINT_CALIBRATION_SPEED = 0.0;
+        joints_.send_calibration_velocities(PLATFORM_JOINT_CALIBRATION_SPEED, DRILL_JOINT_CALIBRATION_SPEED, 
+                                            CONTAINER_JOINT_CALIBRATION_SPEED);
+        calibrated_container = true;
+        RCLCPP_INFO(logger, "Finishing calibration of CONTAINER joint");
+    }
+
+    if (calibrated_platform && calibrated_drill && calibrated_container){
+        if (joints_.get_position_controller_status()){
+            joints_calibrated = true;
+            joints_.send_calibration_velocities(0.0, 0.0, 0.0);
+            goal_sent = false;
+            joints_.setTrajectoryStatus(false);
+            time_between_states = 0;
+            sampler.distance_to_ground = joints_.get_distance_to_ground();
+            state_ = AutonomyStates::MOVE_PLATFORM_DOWN; 
+            RCLCPP_INFO(logger, "Finishing calibration of all joints");
+            return;
+        }
+        if(joints_.get_controller_switching_tatus()){
+            joints_.switchToPositionController();
+        }
+        
+
+    }
 }
 
 void AutonomyController::resetStateVariables(){
@@ -52,7 +83,11 @@ void AutonomyController::resetStateVariables(){
     time_between_states = 0;
     rotation_time = 0;
     recovery_attempt = 0;
-    calibrate_platform = false;
+    calibrated_drill = false;
+    calibrated_platform = false;
+    calibrated_container = false;
+
+    joints_calibrated = false;
 }
 
 void AutonomyController::stop(JointMovement& joints_){

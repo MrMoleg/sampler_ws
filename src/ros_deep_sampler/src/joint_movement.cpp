@@ -156,6 +156,8 @@ void JointMovement::switchToVelocityController()
                 RCLCPP_INFO(
                     node_->get_logger(),
                     "Controller switch successful");
+                active_velocity_controller = true;
+                active_position_controller = false;
             }
             else
             {
@@ -173,6 +175,7 @@ void JointMovement::switchToVelocityController()
 
 void JointMovement::switchToPositionController()
 {
+    controller_switching_end = false;
     using SwitchController =
         controller_manager_msgs::srv::SwitchController;
 
@@ -200,9 +203,12 @@ void JointMovement::switchToPositionController()
 
             if (response->ok)
             {
+                controller_switching_end = true;
                 RCLCPP_INFO(
                     node_->get_logger(),
                     "Controller switch successful");
+                    active_velocity_controller = false;
+                    active_position_controller = true;
             }
             else
             {
@@ -230,6 +236,14 @@ void JointMovement::send_rotor_velocity(JointsIds rotor_id, double vel){
       if(rotor_id == JointsIds::BRUSH_ROTOR){
         brush_rotor_velocity_pub_->publish(msg);
       }
+      
+  }
+
+void JointMovement::send_calibration_velocities(double platform_vel, double drill_vel, double cont_vel){
+      std_msgs::msg::Float64MultiArray msg;
+      msg.data = {platform_vel, drill_vel, cont_vel};
+      joints_vel_pub_->publish(msg);
+      
       
   }
 
@@ -412,25 +426,7 @@ void JointMovement::calibratePlatform(double vel){
 
 
 void JointMovement::calibrateJoints(double vel){
-    float final_pos;
-    
-    std::string joint_name;
-    joint_name = "platform_joint";
-    final_pos = 0.6; //move up on max 
-    double time_to_position =  std::fabs(final_pos)/vel;
-    trajectory_msgs::msg::JointTrajectory traj;
-    trajectory_msgs::msg::JointTrajectoryPoint p;
-    p.positions = {final_pos, final_pos, 0.0}; 
-    RCLCPP_INFO(node_->get_logger(), "Final position: %f",final_pos);  
-    RCLCPP_INFO(node_->get_logger(), "Time to position: %f",time_to_position);
-    p.time_from_start = rclcpp::Duration::from_seconds(time_to_position);
-    traj.joint_names = {"platform_joint",
-    "drill_joint",
-    "container_joint"};
-    traj.points.push_back(p);
-
-    sendTrajectory(traj);
-
+    switchToVelocityController();
     return;
 
 }
@@ -453,7 +449,16 @@ std::string JointMovement::getJointName(JointsIds id)
     }
 }
 
+bool JointMovement::get_position_controller_status(){
+            return active_position_controller;
+        }
 
+bool JointMovement::get_velocity_controller_status(){
+    return active_velocity_controller;
+}
+ bool JointMovement::get_controller_switching_tatus(){
+    return controller_switching_end;
+ }
 
 void JointMovement::setTrajectoryStatus(bool status){
     trajectory_finished_ = status;

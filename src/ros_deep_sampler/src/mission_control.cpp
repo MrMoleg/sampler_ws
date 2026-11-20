@@ -217,7 +217,7 @@ void MissionControl::restartAutonomy(){
 }
 
 void MissionControl::calibrateSampler(){
-    autonomy_.requestCalibration(*joints_, this->get_logger());
+    autonomy_.requestCalibration(sampler_state_, *joints_, this->get_logger());
     
 }
 

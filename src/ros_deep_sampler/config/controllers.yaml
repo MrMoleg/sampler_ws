@@ -57,6 +57,7 @@ velocity_command_controller:
     joints:
       - platform_joint
       - drill_joint
+      - container_joint
 
     interface_name: velocity
 
