@@ -38,6 +38,15 @@ public:
   hardware_interface::return_type read(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
   hardware_interface::return_type write(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) override;
+  hardware_interface::return_type prepare_command_mode_switch(
+      const std::vector<std::string>& start_interfaces,
+      const std::vector<std::string>& stop_interfaces
+  ) override;
+
+  hardware_interface::return_type perform_command_mode_switch(
+      const std::vector<std::string>& start_interfaces,
+      const std::vector<std::string>& stop_interfaces
+  ) override;
 
   std::vector<hardware_interface::CommandInterface> export_command_interfaces();
   std::vector<hardware_interface::StateInterface>  export_state_interfaces();
@@ -51,6 +60,14 @@ public:
 
 
 private:
+  enum class ControlMode
+  {
+      STOPPED,
+      POSITION,
+      VELOCITY
+  };
+
+  std::unordered_map<std::string, ControlMode> joints_mode;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joints_feedback_;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr topic_based_joint_commands_publisher_;
   sensor_msgs::msg::JointState latest_joint_state_;

@@ -58,9 +58,10 @@ CallbackReturn SamplerHardware::on_init(const hardware_interface::HardwareCompon
     return CallbackReturn::ERROR;
   }
 
-  joint_to_can_id_["platform_joint"] = 0x80;
-  joint_to_can_id_["drill_joint"]    = 0x81;
-  joint_to_can_id_["rotor_joint"]    = 0x82;
+//   joint_to_can_id_["platform_joint"] = 0x80;
+//   joint_to_can_id_["drill_joint"]    = 0x81;
+//   joint_to_can_id_["rotor_joint"]    = 0x82;
+  
   //cmd_ = std::make_shared<SamplerCanCmd>();
   feedback_ = std::make_shared<SamplerCanFeedback>();
   LastStatusMsg = std::make_shared<const RoverStatusMsg>();
@@ -90,43 +91,7 @@ CallbackReturn SamplerHardware::on_configure(
             10,
             std::bind(&SamplerHardware::HandleRoverStatus, this, std::placeholders::_1)); 
 
-        // platform_cmd_pub_ =
-        //     get_node()->create_publisher<std_msgs::msg::Float64>(
-        //         "/platform_joint_cmd", 10);
         
-        // drill_cmd_pub_ =
-        //     get_node()->create_publisher<std_msgs::msg::Float64>(
-        //         "/drill_joint_cmd", 10);
-
-        // container_cmd_pub_ = 
-        //     get_node()->create_publisher<std_msgs::msg::Float64>(
-        //         "/container_joint_cmd", 10); 
-
-        // clamp_cmd_pub_ = 
-        //     get_node()->create_publisher<std_msgs::msg::Float64>(
-        //         "/clamp_joint_cmd", 10);                       
-
-        // rotor_cmd_pub_ =
-        //      get_node()->create_publisher<std_msgs::msg::Float64>(
-        //         "/rotor_joint_cmd", 10);
-        // vacuum_rotor_cmd_pub_ =
-        //      get_node()->create_publisher<std_msgs::msg::Float64>(
-        //         "/vacuum_rotor_joint_cmd", 10);
-        // brush_rotor_cmd_pub_ =
-        //      get_node()->create_publisher<std_msgs::msg::Float64>(
-        //         "/brush_rotor_joint_cmd", 10);
-        // joint_state_sub_ =
-        //     get_node()->create_subscription<sensor_msgs::msg::JointState>(
-        //         "/gz_joint_states",
-        //       10,
-        //       [this](const sensor_msgs::msg::JointState::SharedPtr msg)
-        //       {
-        //           for (size_t i = 0; i < msg->name.size(); i++)
-        //           {
-        //               sim_positions_[msg->name[i]] = msg->position[i];
-        //               sim_vel_[msg->name[i]] = msg->velocity[i];
-        //           }
-        //       });
 
         mMissionCmd_ = get_node()->create_subscription<MissionCmd>("/MQTT/SamplerControl", 10,
                     std::bind(&SamplerHardware::HandleMissionCmd, this, std::placeholders::_1));
@@ -138,6 +103,10 @@ CallbackReturn SamplerHardware::on_configure(
         cmd_.actuator_id[4] = RosCanConstants::VescIds::sampler_vacuum;
         cmd_.actuator_id[5] = RosCanConstants::VescIds::sampler_vacuum_brush; // Brush 
         cmd_.actuator_id[6] = RosCanConstants::VescIds::sampler_clamp; // clamp?
+
+        joints_mode["platform_joint"] = ControlMode::STOPPED;
+        joints_mode["drill_joint"] = ControlMode::STOPPED;
+        joints_mode["container_joint"] = ControlMode::STOPPED;
 
     }
 
@@ -310,6 +279,109 @@ SamplerHardware::export_state_interfaces()
     return state_interfaces;
 }
 
+hardware_interface::return_type SamplerHardware::prepare_command_mode_switch(
+    const std::vector<std::string>& start_interfaces,
+    const std::vector<std::string>& stop_interfaces)
+{
+    // Validate whether the requested combination is supported.
+    // For now, accept all combinations.
+
+    return hardware_interface::return_type::OK;
+}
+
+
+hardware_interface::return_type SamplerHardware::perform_command_mode_switch(
+    const std::vector<std::string>& start_interfaces,
+    const std::vector<std::string>& stop_interfaces)
+{
+    bool platform_position_active = joints_mode["platform_joint"] == ControlMode::POSITION;
+    bool platform_velocity_active = joints_mode["platform_joint"]  == ControlMode::VELOCITY;
+    bool drill_position_active = joints_mode["drill_joint"] == ControlMode::POSITION;
+    bool drill_velocity_active = joints_mode["drill_joint"]  == ControlMode::VELOCITY;
+    bool container_position_active = joints_mode["container_joint"] == ControlMode::POSITION;
+    bool container_velocity_active = joints_mode["container_joint"]  == ControlMode::VELOCITY;
+
+    // Remove stopped interfaces
+    for (const auto& interface : stop_interfaces)
+    {
+        if (interface == "platform_joint/position")
+            platform_position_active = false;
+        if (interface == "platform_joint/velocity")
+            platform_velocity_active = false;
+        
+        if (interface == "drill_joint/position")
+            drill_position_active = false;
+        if (interface == "drill_joint/velocity")
+            drill_velocity_active = false;
+
+        if (interface == "container_joint/position")
+            container_position_active = false;
+        if (interface == "platform_joint/velocity")
+            container_velocity_active = false;
+    }
+
+    // Add newly claimed interfaces
+    for (const auto& interface : start_interfaces)
+    {
+        if (interface == "platform_joint/position")
+            platform_position_active = true;
+        if (interface == "platform_joint/velocity")
+            platform_velocity_active = true;
+        
+        if (interface == "drill_joint/position")
+            drill_position_active = true;
+        if (interface == "drill_joint/velocity")
+            drill_velocity_active = true;
+
+        if (interface == "container_joint/position")
+            container_position_active = true;
+        if (interface == "platform_joint/velocity")
+            container_velocity_active = true;
+    }
+
+    // Determine the new control mode
+    if (platform_position_active)
+    {
+        joints_mode["platform_joint"] = ControlMode::POSITION;
+    }
+    else if (platform_velocity_active)
+    {
+        joints_mode["platform_joint"] = ControlMode::VELOCITY;
+    }
+    else
+    {
+        joints_mode["platform_joint"] = ControlMode::STOPPED;
+    }
+
+    if (drill_position_active)
+    {
+        joints_mode["drill_joint"] = ControlMode::POSITION;
+    }
+    else if (drill_velocity_active)
+    {
+        joints_mode["drill_joint"] = ControlMode::VELOCITY;
+    }
+    else
+    {
+        joints_mode["drill_joint"] = ControlMode::STOPPED;
+    }
+
+    if (container_position_active)
+    {
+        joints_mode["container_joint"] = ControlMode::POSITION;
+    }
+    else if (container_velocity_active)
+    {
+        joints_mode["container_joint"] = ControlMode::VELOCITY;
+    }
+    else
+    {
+        joints_mode["container_joint"] = ControlMode::STOPPED;
+    }
+
+    return hardware_interface::return_type::OK;
+}
+
 hardware_interface::return_type SamplerHardware::read(const rclcpp::Time& /*time*/,
                                                             const rclcpp::Duration& /*period*/)
 {
@@ -351,92 +423,13 @@ hardware_interface::return_type SamplerHardware::read(const rclcpp::Time& /*time
   {
     clamp_pos_ = real_positions_[RosCanConstants::VescIds::sampler_clamp];
   }
-  //////////////////////
-//   if (sim_positions_.find("platform_joint") != sim_positions_.end())
-//   {
-//       platform_pos_ = sim_positions_["platform_joint"];
-//   }
-//   if (sim_positions_.find("drill_joint") != sim_positions_.end())
-//   {
-//       drill_pos_ = sim_positions_["drill_joint"];
-//   }
-//   if (sim_positions_.find("container_joint") != sim_positions_.end())
-//   {
-//       container_pos_ = sim_positions_["container_joint"];
-//   }
-//   // if (sim_positions_.find("clamp_joint") != sim_positions_.end())
-//   // {
-//   //     clamp_pos_ = sim_positions_["clamp_joint"];
-//   // }
-
-//   if (sim_vel_.find("platform_joint") != sim_vel_.end())
-//   {
-//       platform_vel_ = sim_vel_["platform_joint"];
-//   }
-//   if (sim_vel_.find("drill_joint") != sim_vel_.end())
-//   {
-//       drill_vel_ = sim_vel_["drill_joint"];
-//   }
-//   if (sim_vel_.find("container_joint") != sim_vel_.end())
-//   {
-//       container_vel_ = sim_vel_["container_joint"];
-//   }
-//   if (sim_vel_.find("rotor_joint") != sim_vel_.end())
-//   {
-//     rotor_vel_ = sim_vel_["rotor_joint"];
-//   }
-//   if (sim_vel_.find("vacuum_rotor_joint") != sim_vel_.end())
-//   {
-//     vacuum_rotor_vel_ = sim_vel_["vacuum_rotor_joint"];
-//   }
-//   if (sim_vel_.find("brush_rotor_joint") != sim_vel_.end())
-//   {
-//     brush_rotor_vel_ = sim_vel_["brush_rotor_joint"];
-//   }
-  // if (sim_vel_.find("clamp_joint") != sim_positions_.end())
-  // {
-  //     clamp_pos_ = sim_positions_["clamp_joint"];
-  // }
+  
  
 
   return hardware_interface::return_type::OK;
 }
 
-void SamplerHardware::calibratejoints(){
-    cmd_.command_id[0] = VESC_COMMAND_SET_RPM;
-    cmd_.command_id[1] = VESC_COMMAND_SET_RPM;
-    cmd_.command_id[2] = VESC_COMMAND_SET_RPM;
-    cmd_.command_id[3] = VESC_COMMAND_SET_RPM;
-    cmd_.command_id[4] = VESC_COMMAND_SET_RPM;
-    cmd_.command_id[5] = VESC_COMMAND_SET_RPM;
-    cmd_.command_id[6] = VESC_COMMAND_SET_POS;
-  
-    if(platform_pos_ < 0.001){
-         cmd_.set_value[0] = 0.0;
-         platform_calibrated = true;
-    }else{
-        cmd_.set_value[0] = 0.5;
-    }
-    if(drill_pos_ < 0.001){
-         cmd_.set_value[1] = 0.0;
-         drill_calibrated = true;
-    }else{
-        cmd_.set_value[1] = 0.5;
-    }
-    if(container_pos_ < 0.001){
-         cmd_.set_value[0] = 0.0;
-         container_calibrated = true;
-    }else{
-        cmd_.set_value[0] = 0.5;
-    }
 
-    cmd_.set_value[3] = 0.0;
-    cmd_.set_value[4] = 0.0;
-    cmd_.set_value[5] = 0.0;
-    cmd_.set_value[6] = 0.0;
-    
-    sampler_can_cmd_pub_->publish(cmd_);
-}
 
 hardware_interface::return_type SamplerHardware::write(const rclcpp::Time& /*time*/,
                                                              const rclcpp::Duration& /*period*/)
@@ -446,34 +439,34 @@ hardware_interface::return_type SamplerHardware::write(const rclcpp::Time& /*tim
   if (rclcpp::ok())
   {
 
+   if(joints_mode["platform_joint"] == ControlMode::POSITION){
+    cmd_.command_id[0] = VESC_COMMAND_SET_POS;
+    cmd_.set_value[0] = platform_cmd_;
+   }else if(joints_mode["platform_joint"] == ControlMode::VELOCITY){
+    cmd_.command_id[0] = VESC_COMMAND_SET_RPM;
+    cmd_.set_value[0] = platform_vel_cmd_;
+   }
+   if(joints_mode["drill_joint"] == ControlMode::POSITION){
+    cmd_.command_id[1] = VESC_COMMAND_SET_POS;
+    cmd_.set_value[1] = drill_cmd_;
+   }else if(joints_mode["drill_joint"] == ControlMode::VELOCITY){
+    cmd_.command_id[1] = VESC_COMMAND_SET_RPM;
+    cmd_.set_value[1] = drill_vel_cmd_;
+   }
+   if(joints_mode["container_joint"] == ControlMode::POSITION){
+    cmd_.command_id[2] = VESC_COMMAND_SET_POS;
+    cmd_.set_value[2] = container_cmd_;
+   }else if(joints_mode["container_joint"] == ControlMode::VELOCITY){
+    cmd_.command_id[2] = VESC_COMMAND_SET_RPM;
+    cmd_.set_value[2] = container_vel_cmd_;
+   }
 
-    if (manual && last_velCtrl){
-        cmd_.command_id[0] = VESC_COMMAND_SET_RPM;
-        cmd_.command_id[1] = VESC_COMMAND_SET_RPM;
-        cmd_.command_id[2] = VESC_COMMAND_SET_RPM;
-
-        cmd_.set_value[0] = platform_vel_cmd_;
-        cmd_.set_value[1] = drill_vel_cmd_;
-        cmd_.set_value[2] = container_vel_cmd_;
-
-    }else{
-        
-        //   if(!(platform_calibrated, drill_calibrated, container_calibrated)){ //// FOR REAL HARDWARE
-        //     calibratejoints();
-        //     return hardware_interface::return_type::OK;
-        //   }
-        cmd_.command_id[0] = VESC_COMMAND_SET_POS;
-        cmd_.command_id[1] = VESC_COMMAND_SET_POS;
-        cmd_.command_id[2] = VESC_COMMAND_SET_POS;
-
-        cmd_.set_value[0] = platform_cmd_;
-        cmd_.set_value[1] = drill_cmd_;
-        cmd_.set_value[2] = container_cmd_;
-
-      
-
-    }
     
+    cmd_.command_id[3] = VESC_COMMAND_SET_RPM;
+    cmd_.command_id[4] = VESC_COMMAND_SET_RPM;
+    cmd_.command_id[5] = VESC_COMMAND_SET_RPM;
+    cmd_.command_id[6] = VESC_COMMAND_SET_RPM;
+
     cmd_.set_value[3] = rotor_cmd_;
     cmd_.set_value[4] = vacuum_rotor_cmd_;
     cmd_.set_value[5] = brush_rotor_cmd_;
